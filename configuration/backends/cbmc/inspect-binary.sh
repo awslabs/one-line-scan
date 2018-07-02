@@ -22,7 +22,7 @@
 SCRIPT=$(readlink -e "$0")
 SCRIPTDIR=$(dirname "$SCRIPT")
 
-set -eux
+set -eu
 
 # limit the memory that can be used when being executed by this script
 source $SCRIPTDIR/../../utils/limit-resources.sh
@@ -169,7 +169,7 @@ INSTRUMENT_STATUS=0
 goto-instrument --bounds-check --pointer-check --memory-leak-check \
                 --signed-overflow-check --div-by-zero-check --undefined-shift-check \
                 --nan-check --float-overflow-check --stack-depth 10 \
-                --model-argc-argv 4 --conversion-check \
+                --model-argc-argv 4 --conversion-check --uninitialized-check \
                 $FILENAME $TARGETBINARY > $INSTRUMENT_ERROR 2>&1 || INSTRUMENT_STATUS=$?
 log "instrumenting the binary finished with status: $INSTRUMENT_STATUS"
 if [ $INSTRUMENT_STATUS -ne 0 ]
