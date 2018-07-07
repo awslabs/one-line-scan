@@ -102,35 +102,6 @@ function storeBinary
   esac
 }
 
-# for certain binaries, no goto-ld section is required
-# hence, select the output file from ld and remove the goto-cc section
-function strip_goto ()
-{
-  logwrapper "${TOOLPREFIX}"GOTO-GCC"${TOOLSUFFIX}" "check strip-goto for $@"
-  use_next=0
-  outputfile="a.out"
-  for a in "$@"
-  do
-    case "$a" in
-      -o) use_next=1 ;;
-      -o*) outputfile=$(echo $a | sed 's/^-o//') ;;
-      *)
-        if [ $use_next -eq 1 ]
-        then
-          use_next=0
-          outputfile=$a
-        fi
-        ;;
-    esac
-  done
-  if [ -f "$outputfile" ] && [[ "$(basename "$outputfile")" =~ .xen.efi.(.*).0 ]]
-  then
-    logwrapper "${TOOLPREFIX}"GOTO-GCC"${TOOLSUFFIX}" "remove goto section from $(readlink -e "$outputfile")"
-    objcopy -R goto-cc "$outputfile" "${outputfile}.removed-gotocc"
-    mv "${outputfile}.removed-gotocc" "${outputfile}"
-  fi
-}
-
 # check the compiler commandline, and print the md5sum of the output binary, as
 # well as the full location
 function logOutputfileHash()
@@ -555,7 +526,6 @@ case "$binary_name" in
     then
         storeBinary "$@"
     fi
-    strip_goto "$@"
     logOutputfileHash "$FINALLINKBINARY" "$@"
     exit $ld_code
     ;;
