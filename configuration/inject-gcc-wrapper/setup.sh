@@ -24,6 +24,7 @@
 #           --keep-going       ... replace the make command with a command that adds the parameter -k
 #           --afl              ... wrap AFL compilers
 #           --fortify          ... run Fortify sourceanalyzer
+#           --smatch           ... run SMATCH code analysis tool
 #           -j N               ... allow N compile commands to be executed in parallel (at least 2)
 #           --trunc            ... delete binary/library lists from directory, try to reuse existing directory
 #           --re-use           ... try to reuse existing directory
@@ -47,6 +48,7 @@ KEEP_GOING_IN_MAKE=
 WRAP_AFL=
 WRAP_CPPCHECK=
 WRAP_FORTIFY=
+WRAP_SMATCH=
 WRAP_GOTOCC=1
 WRAP_PLAIN=
 NUM_LOCKS=2
@@ -69,6 +71,7 @@ parse_arguments ()
     --afl)        WRAP_AFL=t;;
     --cppcheck)   WRAP_CPPCHECK=t;;
     --fortify)    WRAP_FORTIFY=t;;
+    --smatch)     WRAP_SMATCH=t;;
     --no-gotocc)  WRAP_GOTOCC=;;
     --plain)      WRAP_PLAIN=t;;
     --link)       GOTO_GCC_WRAPPER_ENFORCE_GOTO_LINKING=t ;;
@@ -371,6 +374,16 @@ then
       # need to re-load the compiler locations, as Fortify wrappers have been installed
       load_compilers
       [ -z "$NESTED" ] || nested_wrappers Fortify
+    fi
+
+    # wrap smatch
+    if [ -n "$WRAP_SMATCH" ]
+    then
+      source "$SOURCE_DIR/../backends/smatch/smatch-hook-install.sh"
+      inject_smatch
+      # need to re-load the compiler locations, as smatch wrappers have been installed
+      load_compilers
+      [ -z "$NESTED" ] || nested_wrappers smatch
     fi
 
     # wrap AFL
