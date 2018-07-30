@@ -26,6 +26,7 @@ LINK=--link              # by default, enforce goto-ld for linking
 USE_AFL=                 # tell injection to also wrap for afl
 USE_GOTOCC=--use-gotocc  # tell injection to also wrap for goto-cc (CPROVER)
 USE_FORTIFY=             # tell injection to also wrap for Fortify
+USE_SMATCH=              # tell injection to also wrap smatch
 USE_CPPCHECK=            # analyze with cppcheck
 FORTIFY_ANALYSIS_CONFIG= # extra options that should be passed to analysis of fortify
 USE_PLAIN=               # use a simple plain wrapper to log gcc calls
@@ -106,6 +107,7 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --no-link             allow to fall back to native linker in case goto-ld fails
     --afl                 additionally apply compilation for fuzzing with AFL
     --fortify             run HP Fortify's sourcecodeanalyzer
+    --smatch              run smatch (use the SMATCH_EXTRA_ARG environment variable to forward parameter to smatch)
     --cppcheck            analyze with cppcheck
     --no-gotocc           disable default goto-cc compilation
     --plain               log compiler calls with plain wrapper
@@ -159,6 +161,7 @@ do
                         echo "warning: specified --rules parameter without value"
                       fi
                       ;;
+    --smatch)      USE_SMATCH="--smatch";;
     --no-gotocc)   USE_GOTOCC="--no-gotocc";;
     --expert)      if [ -n "$2" ]
                    then
@@ -294,7 +297,7 @@ then
   fi
 
   WRAPPER_SETUP_OPTIONS="--target "$WORKINGDIR" --origin "$BINARY_ORIGIN" \
-    "$LINK" "$USE_EXISTING" "$USE_AFL" "$USE_FORTIFY" \
+    "$LINK" "$USE_EXISTING" "$USE_AFL" "$USE_FORTIFY" "$USE_SMATCH" \
     "$TOOLPREFIX" "$TOOLSUFFIX" -j $NUM_LOCKS "$EXTRA_INJECT_OPTIONS" "$EXTRA_CFLAGS" \
     "$EXPERT" "$USE_GOTOCC"  $USE_CPPCHECK $USE_PLAIN"
   log $(echo "setting up wrapper with: $WRAPPER_SETUP_OPTIONS" | sed 's/  */ /g')

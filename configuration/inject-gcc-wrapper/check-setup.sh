@@ -36,6 +36,8 @@ then
   then
     source "$SOURCE_DIR"/remove-wrapper.sh "--keep-dir"
   fi
+else
+  echo "no link to a new compiler wrapper has been found"
 fi
 echo "Test failed: $failed"
 
