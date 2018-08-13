@@ -28,11 +28,14 @@ inject_smatch()
   local -r HOOK_SRC_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 
   # check if prerequirements are available
-  if ! command -v "$TOOL" &> /dev/null
-  then
-    echo "could not find $TOOL command, abort"
-    return 1
-  fi
+  for T in "$TOOL" cgcc
+  do
+    if ! command -v "$T" &> /dev/null
+    then
+      echo "could not find $T command, abort"
+      return 1
+    fi
+  done
 
   # install wrapper
   mkdir -p "$INSTALL_DIR"
