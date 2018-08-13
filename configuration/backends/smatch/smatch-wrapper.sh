@@ -119,8 +119,9 @@ function run_smatch
   export CHECK="smatch $SMATCH_EXTRA_ARG "
   cgcc -no-compile "$@" "${source_files[@]}" "${header_files[@]}" >> "$rf" 2>> "$rf".err || SMATCH_STATUS=$?
   unset CHECK
+
+  logwrapper "${TOOLPREFIX}"SMATCH"${TOOLSUFFIX}" "run smatch via cgcc [cgcc -no-compile $@ ${source_files[@]} ${header_files[@]}] in [$(pwd)] with [CHECK=$CHECK]"
   logwrapper "${TOOLPREFIX}"SMATCH"${TOOLSUFFIX}" "smatch returned with $SMATCH_STATUS"
-  [ "$SMATCH_STATUS" -eq 0 ] || logwrapper "${TOOLPREFIX}"SMATCH"${TOOLSUFFIX}" "smatch failed when running [smatch $SMATCH_EXTRA_ARG $@ ${source_files[@]} ${header_files[@]}] in [$(pwd)]"
 }
 
 #
