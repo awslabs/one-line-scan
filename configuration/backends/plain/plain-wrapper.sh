@@ -77,6 +77,18 @@ function unlock_plain
   TRAPDIR=
 }
 
+# log calls to non-compiler tools
+function log_tool_call
+{
+  local tool="$1"
+  shift 2
+
+  # lock, and create the file entries
+  lock_plain
+  printf "cd %s; %s %s\n" "$(pwd)" "$tool" "$@" >> "$REPLAYLOG"
+  unlock_plain
+}
+
 # process compiler call with compiler $1 and suffix $2
 function log_compiler_call
 {
@@ -236,6 +248,12 @@ then
       ;;
     "$TOOLPREFIX""c++""$TOOLSUFFIX" | "$TOOLPREFIX""g++""$TOOLSUFFIX" | "$TOOLPREFIX""clang++""$TOOLSUFFIX" )
       log_compiler_call "$NATIVE_TOOL" "cpp" "$@"
+      ;;
+    "$TOOLPREFIX""ld""$TOOLSUFFIX")
+      log_tool_call "$NATIVE_TOOL" "$@"
+      ;;
+    "$TOOLPREFIX""as""$TOOLSUFFIX")
+      log_tool_call "$NATIVE_TOOL" "$@"
       ;;
     *)
       logwrapper "${TOOLPREFIX}"PLAIN"${TOOLSUFFIX}"  "error: plain wrapper has been called with an unknown tool name: $binary_name"

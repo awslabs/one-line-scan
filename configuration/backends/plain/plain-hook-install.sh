@@ -65,7 +65,7 @@ inject_plain()
     done
 
     # make the other compiler use the fortify wrapper
-    for TARGET_COMPILER in g++ clang clang++ cc c++
+    for TARGET_COMPILER in g++ clang clang++ cc c++ as ld
     do
       # might fail, because if check-setup.sh is used, the directory is already
       # there, as well as the links

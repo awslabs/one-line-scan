@@ -193,9 +193,9 @@ do
     --origin)      BINARY_ORIGIN=$2; shift;;
     --continue | -c) CONTINUE=t;;
     --keep-going)  KEEP_GOING=t;;
-    -j)            if [[ "$2" =~ ^[0-9]+$ ]] && [ $2 -ge 2 ]
+    -j)            if [[ "$2" =~ ^[0-9]+$ ]]
                    then
-                     NUM_LOCKS=$2
+                     [ $2 -lt 2 ] || NUM_LOCKS=$2
                      shift
                    else
                      echo "warning: specified -j without a number, will not change value"
