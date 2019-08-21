@@ -81,7 +81,7 @@ function unlock_plain
 function log_tool_call
 {
   local tool="$1"
-  shift 2
+  shift 1
 
   # lock, and create the file entries
   lock_plain
