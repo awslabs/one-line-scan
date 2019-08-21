@@ -264,8 +264,14 @@ fi
 
 STATUS=0
 logwrapper "${TOOLPREFIX}"PLAIN"${TOOLSUFFIX}" "call native $NATIVE_TOOL $@"
-[ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
-$NATIVE_TOOL "$@" $GCCEXTRAARGUMENTS || STATUS=$?
+if [ "$binary_name" != "${TOOLPREFIX}as${TOOLSUFFIX}" ] && [ "$binary_name" != "${TOOLPREFIX}ld${TOOLSUFFIX}" ]
+then
+  [ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
+  "$NATIVE_TOOL" "$@" $GCCEXTRAARGUMENTS || STATUS=$?
+else
+  [ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
+  "$NATIVE_TOOL" "$@" || STATUS=$?
+fi
 
 # log failed calls
 if [ "$STATUS" -ne 0 ]
