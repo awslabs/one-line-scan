@@ -173,7 +173,7 @@ function log_compiler_call
   cat << EOF  >> "$CALLLOG"
 {
 	'call' : '$compiler $CALL'
-        'dir' : '$DIR'
+	'dir' : '$DIR'
 	'source' : '$SOURCE_FILES'
 	'macros' : '$MACROS'
 	'include' : '$INCLUDES'
