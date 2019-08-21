@@ -20,10 +20,12 @@
 #################### DO NOT MODIFY ##################
 
 # by default, all supported tools have not been found.
+NATIVE_AS=/bin/false
 NATIVE_GCC=/bin/false
 NATIVE_GPP=/bin/false
 NATIVE_CLANG=/bin/false
 NATIVE_CLANGPP=/bin/false
+NATIVE_LD=/bin/false
 
 TOOLPREFIX=
 TOOLSUFFIX=
@@ -210,10 +212,12 @@ binary_name=$(basename $0)
 
 NATIVE_TOOL=
 case "$binary_name" in
+  "${TOOLPREFIX}as${TOOLSUFFIX}") NATIVE_TOOL=$NATIVE_AS ;;
   "$TOOLPREFIX""cc""$TOOLSUFFIX" | "$TOOLPREFIX""gcc""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_GCC ;;
   "$TOOLPREFIX""c++""$TOOLSUFFIX" | "$TOOLPREFIX""g++""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_GPP ;;
   "$TOOLPREFIX""clang""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_CLANG ;;
   "$TOOLPREFIX""clang++""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_CLANGPP ;;
+  "${TOOLPREFIX}ld${TOOLSUFFIX}") NATIVE_TOOL=$NATIVE_LD ;;
   *)
     logwrapper "${TOOLPREFIX}"PLAIN"${TOOLSUFFIX}"  "error: plain wrapper has been called with an unknown tool name: $binary_name"
     exit 1
