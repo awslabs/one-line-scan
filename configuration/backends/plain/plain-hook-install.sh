@@ -57,7 +57,7 @@ inject_plain()
     # tell the wrapper from where install has been called
     perl -p -i -e "s:CALL_DIR=:CALL_DIR=$(readlink -e $(pwd))/:" "$TARGET_GCC"
 
-    for t in gcc g++ clang clang++
+    for t in gcc g++ clang clang++ as ld
     do
       T=$(echo $t | tr '[a-z]+' '[A-Z]P')
       p=$(find_native "$PREFIX"$t"$SUFFIX")

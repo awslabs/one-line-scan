@@ -20,10 +20,12 @@
 #################### DO NOT MODIFY ##################
 
 # by default, all supported tools have not been found.
+NATIVE_AS=/bin/false
 NATIVE_GCC=/bin/false
 NATIVE_GPP=/bin/false
 NATIVE_CLANG=/bin/false
 NATIVE_CLANGPP=/bin/false
+NATIVE_LD=/bin/false
 
 TOOLPREFIX=
 TOOLSUFFIX=
@@ -81,7 +83,7 @@ function unlock_plain
 function log_tool_call
 {
   local tool="$1"
-  shift 2
+  shift 1
 
   # lock, and create the file entries
   lock_plain
@@ -171,7 +173,7 @@ function log_compiler_call
   cat << EOF  >> "$CALLLOG"
 {
 	'call' : '$compiler $CALL'
-        'dir' : '$DIR'
+	'dir' : '$DIR'
 	'source' : '$SOURCE_FILES'
 	'macros' : '$MACROS'
 	'include' : '$INCLUDES'
@@ -210,10 +212,12 @@ binary_name=$(basename $0)
 
 NATIVE_TOOL=
 case "$binary_name" in
+  "${TOOLPREFIX}as${TOOLSUFFIX}") NATIVE_TOOL=$NATIVE_AS ;;
   "$TOOLPREFIX""cc""$TOOLSUFFIX" | "$TOOLPREFIX""gcc""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_GCC ;;
   "$TOOLPREFIX""c++""$TOOLSUFFIX" | "$TOOLPREFIX""g++""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_GPP ;;
   "$TOOLPREFIX""clang""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_CLANG ;;
   "$TOOLPREFIX""clang++""$TOOLSUFFIX") NATIVE_TOOL=$NATIVE_CLANGPP ;;
+  "${TOOLPREFIX}ld${TOOLSUFFIX}") NATIVE_TOOL=$NATIVE_LD ;;
   *)
     logwrapper "${TOOLPREFIX}"PLAIN"${TOOLSUFFIX}"  "error: plain wrapper has been called with an unknown tool name: $binary_name"
     exit 1
@@ -264,8 +268,14 @@ fi
 
 STATUS=0
 logwrapper "${TOOLPREFIX}"PLAIN"${TOOLSUFFIX}" "call native $NATIVE_TOOL $@"
-[ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
-$NATIVE_TOOL "$@" $GCCEXTRAARGUMENTS || STATUS=$?
+if [ "$binary_name" != "${TOOLPREFIX}as${TOOLSUFFIX}" ] && [ "$binary_name" != "${TOOLPREFIX}ld${TOOLSUFFIX}" ]
+then
+  [ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
+  "$NATIVE_TOOL" "$@" $GCCEXTRAARGUMENTS || STATUS=$?
+else
+  [ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
+  "$NATIVE_TOOL" "$@" || STATUS=$?
+fi
 
 # log failed calls
 if [ "$STATUS" -ne 0 ]
