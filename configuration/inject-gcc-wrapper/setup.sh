@@ -51,6 +51,7 @@ WRAP_FORTIFY=
 WRAP_SMATCH=
 WRAP_GOTOCC=1
 WRAP_PLAIN=
+WRAP_INFER=
 NUM_LOCKS=2
 USE_EXISTING_DIR=
 FORWARDS=()
@@ -74,6 +75,7 @@ parse_arguments ()
     --smatch)     WRAP_SMATCH=t;;
     --no-gotocc)  WRAP_GOTOCC=;;
     --plain)      WRAP_PLAIN=t;;
+    --infer)      WRAP_INFER=1;;
     --link)       GOTO_GCC_WRAPPER_ENFORCE_GOTO_LINKING=t ;;
     --no-link)    GOTO_GCC_WRAPPER_ENFORCE_GOTO_LINKING=  ;;
     --keep-going) KEEP_GOING_IN_MAKE=t;;
@@ -363,6 +365,14 @@ then
     then
       source "$SOURCE_DIR/../backends/plain/plain-hook-install.sh"
       inject_plain
+      load_compilers
+    fi
+
+    # wrap infer
+    if [ -n "$WRAP_INFER" ]
+    then
+      source "$SOURCE_DIR/../backends/infer/infer-hook-install.sh"
+      inject_infer
       load_compilers
     fi
 

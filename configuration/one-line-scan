@@ -31,6 +31,7 @@ USE_SMATCH=              # tell injection to also wrap smatch
 USE_CPPCHECK=            # analyze with cppcheck
 FORTIFY_ANALYSIS_CONFIG= # extra options that should be passed to analysis of fortify
 USE_PLAIN=               # use a simple plain wrapper to log gcc calls
+USE_INFER=               # use a simple infer wrapper to log gcc calls
 EXPERT=                  # options that will be forwarded to the wrapper
 WORKINGDIR=OLS           # the default output directory
 USE_EXISTING=            # use output directory even if it exists already
@@ -113,6 +114,7 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --cppcheck            analyze with cppcheck
     --no-gotocc           disable default goto-cc compilation
     --plain               log compiler calls with plain wrapper
+    --infer               use infer for analysis
     --prefix PRF          additionally to gcc also wrap "PRF"gcc (will not be combined with suffix)
     --suffix SUF          additionally to gcc also wrap gcc"SUF" (will not be combined with prefix)
     --output DIR (-o DIR) set the output directory to DIR
@@ -175,6 +177,7 @@ do
                    fi
                    ;;
     --plain)       USE_PLAIN="--plain";;
+    --infer)       USE_INFER="--infer";;
     --prefix)      if [ -n "$2" ]
                    then
                      TOOLPREFIX+=" --prefix $2"
@@ -302,7 +305,7 @@ then
   WRAPPER_SETUP_OPTIONS="--target "$WORKINGDIR" --origin "$BINARY_ORIGIN" \
     "$LINK" "$USE_EXISTING" "$USE_AFL" "$USE_FORTIFY" "$USE_SMATCH" \
     "$TOOLPREFIX" "$TOOLSUFFIX" -j $NUM_LOCKS "$EXTRA_INJECT_OPTIONS" "$EXTRA_CFLAGS" \
-    "$EXPERT" "$USE_GOTOCC"  $USE_CPPCHECK $USE_PLAIN"
+    "$EXPERT" "$USE_GOTOCC"  $USE_CPPCHECK $USE_PLAIN $USE_INFER"
   log $(echo "setting up wrapper with: $WRAPPER_SETUP_OPTIONS" | sed 's/  */ /g')
 
   # check whether the environment is actually usable for the wrapper injection
@@ -374,6 +377,14 @@ then
   log "evaluate plain wrapper ..."
   source "$SCRIPTDIR/backends/plain/plain-evaluate.sh"
   evaluate_plain || ANALYSISRESULT=$?
+fi
+
+# evaluate infer
+if [ -z "$NOANALYSIS" ] && [ -n "$USE_INFER" ]
+then
+  log "evaluate infer wrapper ..."
+  source "$SCRIPTDIR/backends/infer/infer-evaluate.sh"
+  evaluate_infer || ANALYSISRESULT=$?
 fi
 
 # evaluate fortify
