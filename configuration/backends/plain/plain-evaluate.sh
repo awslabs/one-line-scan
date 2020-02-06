@@ -19,9 +19,24 @@ function evaluate_plain
   local -r RESULTS_DIR="$WORKINGDIR/plain"
   local -r CALLLOG="$RESULTS_DIR/calls.json"
   local -r REPLAYLOG="$RESULTS_DIR/replay.log"
+  local -r CMDB="$RESULTS_DIR"/compilation_database.json
+
+  if [ -n "$(find "$RESULTS_DIR"/compilation_databases -name "*.json")" ]
+  then
+    echo "Combining compilation databases into a single one ..."
+    echo "[" > "$CMDB"
+    find "$RESULTS_DIR"/compilation_databases -name "*.json" | \
+      sort -g | \
+      xargs cat | \
+      sed  '$ s:},$:}:g' >> "$CMDB"
+    echo "]" >> "$CMDB"
+  else
+    echo "Did not find JSON files to assemble a compilation database"
+  fi
 
   echo "found $(cat $REPLAYLOG | wc -l) calls to the compiler"
   [ ! -f "$REPLAYLOG" ] || echo "calls to replay can be found in: $REPLAYLOG"
   [ ! -f "$CALLLOG" ] || echo "more structured calls can be found in: $CALLLOG"
+  [ ! -f "$RESULTS_DIR/compilation_database.json" ] || echo "Combilation database can be found in: $CMDB"
   return 0
 }
