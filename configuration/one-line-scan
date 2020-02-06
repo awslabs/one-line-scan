@@ -22,6 +22,7 @@
 #
 # default arguments
 NOANALYSIS=              # by default, we use analysis
+ANALYSISONLY=            # by default, we will also build
 LINK=--link              # by default, enforce goto-ld for linking
 USE_AFL=                 # tell injection to also wrap for afl
 USE_GOTOCC=--use-gotocc  # tell injection to also wrap for goto-cc (CPROVER)
@@ -103,6 +104,7 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --debug      (-d)     run in verbose mode and display commands before they are executed
     --continue   (-c)     continue with the build of a given directory and (re)perform analysis
     --no-analysis         only build, omit analysis
+    --analysis-only       do not build, but use the existing directory content to only run analysis
     --expert ARG          forward ARG directly to compiler wrapper setup
     --no-link             allow to fall back to native linker in case goto-ld fails
     --afl                 additionally apply compilation for fuzzing with AFL
@@ -149,6 +151,7 @@ do
     --help | -h)   usage; exit 0;;
     --debug | -d)  set -x;;
     --no-analysis) NOANALYSIS=t;;
+    --analysis-only) ANALYSISONLY=t; USE_EXISTING=--re-use;;
     --no-link)     LINK=;;
     --afl)         USE_AFL="--afl";;
     --cppcheck)    USE_CPPCHECK="--cppcheck" ;;
@@ -321,10 +324,16 @@ then
   # store information about the build environment
   storeEnvironmentInfo $WORKINGDIR "$@"
 
-  # execute the actual build, store stdout and stderr in build.log
-  log "execute build command"
-  "$@" \
-    > >(tee -a "$WORKINGDIR"/build.log) 2>&1 || BUILDRESULT=$?
+  if [ -z "$ANALYSISONLY" ]
+  then
+    # execute the actual build, store stdout and stderr in build.log
+    log "execute build command"
+    "$@" \
+      > >(tee -a "$WORKINGDIR"/build.log) 2>&1 || BUILDRESULT=$?
+  else
+    # we will not build
+    log "skipping build command"
+  fi
 
   # restore location to gcc, keep directory
   source $INJECT_TOOLS/remove-wrapper.sh --keep-dir
