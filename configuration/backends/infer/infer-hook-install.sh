@@ -25,7 +25,7 @@ inject_infer() {
   local -r INSTALL_DIR="$GOTO_GCC_WRAPPER_INSTALL_DIR/$TOOL"
 
   # check if prerequirements are available
-  for CHECK_TOOL in $TOOL clang++; do
+  for CHECK_TOOL in $TOOL jq; do
     if ! command -v "$CHECK_TOOL" &>/dev/null; then
       echo "could not find $CHECK_TOOL command, abort"
       return 1

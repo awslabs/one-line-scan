@@ -93,42 +93,92 @@ function log_tool_call() {
 function log_compiler_call() {
   local compiler="$1"
   local suffix="$2"
-  local skip_next=0
+
+  local -a SOURCE_FILES=( )
+  local -i skip_next=0
+  local -i output_next=0
+  local -i use_next_include=0
+  local -i use_next_macro=0
+  local OUTPUT="-"
 
   shift 2
 
-  CLANG_DEPS_ARGS=()
-  for a in "$@"; do
-    if [ $skip_next -eq 1 ]; then
+  local -a NEWARGV=( )
+  local -a INCLUDES=( )
+  local -a MACROS=( )
+
+  # collect the relevant pieces of the CLI, essentially source files and output
+  for a in "$@"
+  do
+    if [ "$output_next" -eq 1 ]
+    then
+      OUTPUT="$a"
+      output_next=0
+    fi
+    if [ $skip_next -eq 1 ]
+    then
       skip_next=0
       continue
     fi
+    # handle part of split options that have to be forwarded
+    if [ $use_next_include -eq 1 ]
+    then
+      use_next_include=0
+      INCLUDES+=( "$a" )
+      continue
+    fi
+    if [ $use_next_macro -eq 1 ]
+    then
+      use_next_macro=0
+      MACROS+=( "$a" )
+      continue
+    fi
 
-    # we are only interested in "-I" and "-D"
+    # we are interested in "-o" and source files
     case "$a" in
-    -M | -MM) return 1 ;; # updates make rules only
-    -MMD | -MP | -MD) true ;;
-    -MT | -MF) skip_next=1 ;;
-    -o) skip_next=1 ;;
-    # collect files
-    *.c | *.cc | *.cpp | *.c++ | *.C)
-      NEWARGV+=("$a")
-      HAS_SRC_FILES=1
-      ;;
-    *) NEWARGV+=("$a") ;;
+      -M|-MM) return 1 ;; # updates make rules only
+      -MMD | -MP | -MD) true ;;
+      -MT | -MF) skip_next=1 ;;
+      -c) true ;;
+      -S) true ;;
+      -o) skip_next=1; output_next=1 ;;
+      -o*) true ;;
+      -Wp*) true ;;
+      # collect -D*, -U* and -I* without space
+      -D* | -U* ) MACROS+=( "$a" );;
+      -I* ) INCLUDES+=( "$a" );;
+      # handle split options that need to be forwarded
+      -D | -U ) MACROS+=( "$a" ); use_next_macro=1;;
+      -I ) INCLUDES+=( "$a" ); use_next_include=1;;
+      # options that do not need to be treated specially
+      -*) true ;;
+      # collect files
+      *.c|*.cc|*.cpp|*.c++|*.C) SOURCE_FILES+=( "$a" ) ;;
+      # we are not interested in object files
+      *.o) true ;;
+      *) NEWARGV+=( "$a" ) ;;
     esac
   done
 
-  OUTPUT_DEPS_FILE="$(echo "${PWD}${NEWARGV[@]}" | tr -d " /" | md5sum | awk '{print $1}')"
-  OUTPUT_DEPS_FILE="$(date +%s%N)_$OUTPUT_DEPS_FILE" # make sure we can sort by precise timestamp
-  OUTPUT_DEPS_FILE="$OUTPUT_DIR_BASE"/deps_output/"$OUTPUT_DEPS_FILE"
+  # create the JSON blob to log for each source file
+  local -a COMMAND_ARRAY=("$compiler")
+  COMMAND_ARRAY+=("$@")
+  local JSON_COMMAND
+  JSON_COMMAND="$(printf '%s\n' "${COMMAND_ARRAY[@]}" | jq -R . | jq -sc .)"
 
-  # run clang to write the dependency
-  local STATUS=0
-  mkdir -p "$(dirname "$OUTPUT_DEPS_FILE")" # make sure the directory is present
-  echo "clang++ -MJ $OUTPUT_DEPS_FILE.json ${NEWARGV[@]}" &>"$OUTPUT_DEPS_FILE".output.log
-  clang++ -MJ "$OUTPUT_DEPS_FILE".json "${NEWARGV[@]}" &>>"$OUTPUT_DEPS_FILE".output.log || STATUS=$?
-  echo "exit code of compilation database creation: $STATUS" &>>"$OUTPUT_DEPS_FILE".output.log
+  mkdir -p "$OUTPUT_DIR_BASE"/deps_output
+
+  # write an ouput for each file
+  for OUTPUT_FILE in "${SOURCE_FILES[@]}"
+  do
+    # make sure the output name is unique
+    OUTPUT_DEPS_FILE="$(echo "${PWD}$@${OUTPUT_FILE}" | tr -d " /" | md5sum | awk '{print $1}')"
+    OUTPUT_DEPS_FILE="$(date +%s%N)_$OUTPUT_DEPS_FILE" # make sure we can sort by precise timestamp
+    OUTPUT_DEPS_FILE="$OUTPUT_DIR_BASE"/deps_output/"$OUTPUT_DEPS_FILE"
+
+    echo "$PWD: ${COMMAND_ARRAY[@]}" >> "$OUTPUT_DEPS_FILE".log
+    echo "{ \"directory\": \"$PWD\", \"file\": \"$OUTPUT_FILE\", \"output\": \"$OUTPUT\", \"arguments\": $JSON_COMMAND }," >> "$OUTPUT_DEPS_FILE".json
+  done
 }
 
 #
