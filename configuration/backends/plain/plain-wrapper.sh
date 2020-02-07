@@ -26,6 +26,7 @@ NATIVE_GPP=/bin/false
 NATIVE_CLANG=/bin/false
 NATIVE_CLANGPP=/bin/false
 NATIVE_LD=/bin/false
+HAS_JQ=false
 
 TOOLPREFIX=
 TOOLSUFFIX=
@@ -50,6 +51,7 @@ LOG="$SCRIPTDIR/plain-preprocess.log"
 CALLLOG="$SCRIPTDIR/calls.json"
 REPLAYLOG="$SCRIPTDIR/replay.log"
 FAILLOG="$SCRIPTDIR/failed_calls.log"
+CDB_OUTPUT_DIR="$SCRIPTDIR/compilation_databases"
 
 # load the library
 source $SCRIPTDIR/../ols-library.sh || exit 1
@@ -99,17 +101,24 @@ function log_compiler_call
   local i=0
   local SOURCE_FILES=( )
   local skip_next=0
+  local output_next=0
   local use_next_include=0
   local use_next_macro=0
+  local OUTPUT="-"
 
   shift 2
 
-  NEWARGV=( )
-  INCLUDES=( )
-  MACROS=( )
+  local -a NEWARGV=( )
+  local -a INCLUDES=( )
+  local -a MACROS=( )
 
   for a in "$@"
   do
+    if [ "$output_next" -eq 1 ]
+    then
+      OUTPUT="$a"
+      output_next=0
+    fi
     if [ $skip_next -eq 1 ]
     then
       skip_next=0
@@ -136,7 +145,7 @@ function log_compiler_call
       -MT | -MF) skip_next=1 ;;
       -c) true ;;
       -S) true ;;
-      -o) skip_next=1 ;;
+      -o) skip_next=1; output_next=1 ;;
       -o*) true ;;
       -Wp*) true ;;
       # collect -D*, -U* and -I* without space
@@ -154,6 +163,29 @@ function log_compiler_call
       *) NEWARGV+=( "$a" ) ;;
     esac
   done
+
+  # create the JSON blob to log for each source file for the compilation database
+  if [ "$HAS_JQ" = true ]
+  then
+    local -a COMMAND_ARRAY=("$compiler")
+    COMMAND_ARRAY+=("$@")
+    local JSON_COMMAND
+    JSON_COMMAND="$(printf '%s\n' "${COMMAND_ARRAY[@]}" | jq -R . | jq -sc .)"
+
+    mkdir -p "$CDB_OUTPUT_DIR"
+
+    # write an ouput for each file
+    for OUTPUT_FILE in "${SOURCE_FILES[@]}"
+    do
+      # make sure the output name is unique
+      OUTPUT_DEPS_FILE="$(echo "${PWD}$@${OUTPUT_FILE}" | tr -d " /" | md5sum | awk '{print $1}')"
+      OUTPUT_DEPS_FILE="$(date +%s%N)_$OUTPUT_DEPS_FILE" # make sure we can sort by precise timestamp
+      OUTPUT_DEPS_FILE="$CDB_OUTPUT_DIR"/"$OUTPUT_DEPS_FILE"
+
+      echo "$PWD: ${COMMAND_ARRAY[@]}" >> "$OUTPUT_DEPS_FILE".log
+      echo "{ \"directory\": \"$PWD\", \"file\": \"$OUTPUT_FILE\", \"output\": \"$OUTPUT\", \"arguments\": $JSON_COMMAND }," >> "$OUTPUT_DEPS_FILE".json
+    done
+  fi
 
   # use the directory relative to the call, in case there is a common prefix
   DIR=$(readlink -e $(pwd))

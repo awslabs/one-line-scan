@@ -28,6 +28,13 @@ inject_plain()
   # use source dir to be able to copy the correct wrapper script
   local -r HOOK_SRC_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 
+  local HAS_JQ=true
+  if ! command -v jq &> /dev/null
+  then
+    HAS_JQ=false
+    echo "warning: did not find jq, will not create compilation databases"
+  fi
+
   # install wrapper
   mkdir -p "$INSTALL_DIR"
   for SUFFIX in "" $TOOLSUFFIX
@@ -56,6 +63,12 @@ inject_plain()
 
     # tell the wrapper from where install has been called
     perl -p -i -e "s:CALL_DIR=:CALL_DIR=$(readlink -e $(pwd))/:" "$TARGET_GCC"
+
+    # in case we have jq present, we can create compilation databases
+    if [ "$HAS_JQ" = true ]
+    then
+      perl -p -i -e "s:HAS_JQ=false:HAS_JQ=true:" "$TARGET_GCC"
+    fi
 
     for t in gcc g++ clang clang++ as ld
     do
