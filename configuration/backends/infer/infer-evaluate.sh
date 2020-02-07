@@ -13,6 +13,22 @@
 #
 # Evaluate the infer wrapper run
 
+# drop gcc parameters that clang does not understand from compilation database
+function prepare_gcc_compilation_db_for_clang() {
+  local -r DB="$1"
+
+  # Make sure we keep the original compilation database, so that we can easily restore it.
+  cp "$DB" "$DB".original
+
+  local -a BAD_PARAMS=("-mskip-rax-setup" "-mindirect-branch=thunk-extern")
+  BAD_PARAMS+=("-mindirect-branch-register" "-mpreferred-stack-boundary=2")
+  BAD_PARAMS+=("-fno-var-tracking-assignments" "-fconserve-stack")
+
+  for PATTERN in "${BAD_PARAMS[@]}"; do
+    sed -i "s:,\"${PATTERN}\"::g" "$DB"
+  done
+}
+
 # Evaluate and return non-zero in case of failure
 function evaluate_infer() {
   local -r RESULTS_DIR="$WORKINGDIR/infer"
@@ -25,6 +41,8 @@ function evaluate_infer() {
     xargs cat |
     sed '$ s:},$:}:g' >>"$RESULTS_DIR"/combined_compilation_database.json
   echo "]" >>"$RESULTS_DIR"/combined_compilation_database.json
+
+  prepare_gcc_compilation_db_for_clang "$RESULTS_DIR"/combined_compilation_database.json
 
   echo "Running capturing from compilation database ..."
   infer capture -o "$INFER_OUTPUT_DIR" \
