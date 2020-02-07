@@ -44,12 +44,13 @@ function evaluate_infer() {
 
   prepare_gcc_compilation_db_for_clang "$RESULTS_DIR"/combined_compilation_database.json
 
-  echo "Running capturing from compilation database ..."
-  infer capture -o "$INFER_OUTPUT_DIR" \
-    --compilation-database "$RESULTS_DIR"/combined_compilation_database.json
+  echo "Running capturing from compilation database (storing output in "$RESULTS_DIR"/infer_capture.log) ..."
+  infer capture --keep-going -o "$INFER_OUTPUT_DIR" \
+    --compilation-database "$RESULTS_DIR"/combined_compilation_database.json &>"$RESULTS_DIR"/infer_capture.log
+  grep " errors generated." "$RESULTS_DIR"/infer_capture.log | sort -u
 
   # run analysis on combined output from "infer capture --continue" calls
-  echo "Running infer analyze ..."
+  echo "Running infer analyze (storing output in "$RESULTS_DIR"/infer_analyze.log) ..."
   infer analyze \
     --keep-going \
     --bufferoverrun \
@@ -59,6 +60,8 @@ function evaluate_infer() {
     --quandaryBO \
     -o "$INFER_OUTPUT_DIR" &>"$RESULTS_DIR"/infer_analyze.log
 
+  CLANG_ERROR_COUNT=$(grep "Error: the following clang command did not run successfull" -c "$RESULTS_DIR"/infer_capture.log)
+
   # Other, potentially relevant, parameter to infer analyze:
   #     --purity \
   #     --loop-hoisting \
@@ -66,12 +69,15 @@ function evaluate_infer() {
   if [ -r ""$INFER_OUTPUT_DIR"/report.json" ]; then
     # Turn the output of this JSON file into a gcc-style comments file
     cat "$INFER_OUTPUT_DIR"/report.json |
-      python3 "$WORKINGDIR"/transform_report.py >"$RESULTS_DIR"/gcc_style_report.txt
+      python3 "$RESULTS_DIR"/transform_report.py >"$RESULTS_DIR"/gcc_style_report.txt
 
     # Show the gcc-style results
     cat "$RESULTS_DIR"/gcc_style_report.txt
+
+    echo "Clang capture errors: $CLANG_ERROR_COUNT"
   else
     echo "error: did not find report.json from Infer analysis"
+    echo "Clang capture errors: $CLANG_ERROR_COUNT"
     return 1
   fi
 
