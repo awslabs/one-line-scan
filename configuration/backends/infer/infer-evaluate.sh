@@ -29,6 +29,23 @@ function prepare_gcc_compilation_db_for_clang() {
   done
 }
 
+# Get some stats, especially around coverage and failures
+function print_infer_analysis_stats() {
+  local -r RESULTS_DIR="$1"
+
+  local COMPILE_COMMANDS=$(cat "$RESULTS_DIR"/combined_compilation_database.json | wc -l)
+  # Take care of opening and closing bracket
+  COMPILE_COMMANDS=$((COMPILE_COMMANDS - 2))
+
+  local -r CLANG_ERROR_COUNT=$(grep "Error: the following clang command did not run successfull" -c "$RESULTS_DIR"/infer_capture.log)
+
+  # grep " errors generated." "$RESULTS_DIR"/infer_capture.log | sort -u
+  local -r CAPTURE_ERRORS=$(grep -c "Failed to execute compilation command:" "$RESULTS_DIR"/infer_capture.log)
+
+  echo "Number of errors during capturing: $CLANG_ERROR_COUNT"
+  echo "Failed to capture $CAPTURE_ERRORS files out of $COMPILE_COMMANDS (check $RESULTS_DIR/infer_capture.log for details)"
+}
+
 # Evaluate and return non-zero in case of failure
 function evaluate_infer() {
   local -r RESULTS_DIR="$WORKINGDIR/infer"
@@ -60,13 +77,13 @@ function evaluate_infer() {
     --quandaryBO \
     -o "$INFER_OUTPUT_DIR" &>"$RESULTS_DIR"/infer_analyze.log
 
-  CLANG_ERROR_COUNT=$(grep "Error: the following clang command did not run successfull" -c "$RESULTS_DIR"/infer_capture.log)
-
   # Other, potentially relevant, parameter to infer analyze:
   #     --purity \
   #     --loop-hoisting \
 
-  if [ -r ""$INFER_OUTPUT_DIR"/report.json" ]; then
+  local -i STATUS=0
+
+  if [ -r "$INFER_OUTPUT_DIR/report.json" ]; then
     # Turn the output of this JSON file into a gcc-style comments file
     cat "$INFER_OUTPUT_DIR"/report.json |
       python3 "$RESULTS_DIR"/transform_report.py >"$RESULTS_DIR"/gcc_style_report.txt
@@ -74,12 +91,13 @@ function evaluate_infer() {
     # Show the gcc-style results
     cat "$RESULTS_DIR"/gcc_style_report.txt
 
-    echo "Clang capture errors: $CLANG_ERROR_COUNT"
   else
     echo "error: did not find report.json from Infer analysis"
-    echo "Clang capture errors: $CLANG_ERROR_COUNT"
-    return 1
+    STATUS=1
   fi
 
-  return 0
+  print_infer_analysis_stats "$RESULTS_DIR"
+  [ -r "$RESULTS_DIR"/gcc_style_report.txt ] && echo "All infer findings are listed in $RESULTS_DIR/gcc_style_report.txt ($(cat "$RESULTS_DIR"/gcc_style_report.txt | wc -l) findings)"
+
+  return $STATUS
 }
