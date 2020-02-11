@@ -13,7 +13,9 @@
 #
 # Evaluate the infer wrapper run
 
-# drop gcc parameters that clang does not understand from compilation database
+# Drop gcc parameters that clang does not understand from compilation database
+# This is a cache for the automated parameter drop mechanism implemented in the
+# below capture function infer_capture
 function prepare_gcc_compilation_db_for_clang() {
   local -r DB="$1"
 
@@ -27,6 +29,47 @@ function prepare_gcc_compilation_db_for_clang() {
   for PATTERN in "${BAD_PARAMS[@]}"; do
     sed -i "s:,\"${PATTERN}\"::g" "$DB"
   done
+}
+
+# Check the capture log for recoverable errors, and adapt compilation DB accordingly
+# Return success (0) in case we should retry
+function needs_capturing_retry() {
+  local -r COMPILATION_DB="$1"
+  local -r CAPTURE_LOG="$2"
+
+  if grep -q "clang.*: error: unknown argument:" "$CAPTURE_LOG"; then
+    echo "Found recoverable retry error"
+    local -a ARGUMENTS=($(awk '/clang.*: error: unknown argument:/ {print $NF}' "$CAPTURE_LOG" | sort -u | tr -d "'"))
+
+    for ARGUMENT in "${ARGUMENTS[@]}"; do
+      sed -i "s:,\"${ARGUMENT}\"::g" "$COMPILATION_DB"
+    done
+
+    return 0
+  fi
+
+  return 1 # no errors found the require a retry
+}
+
+function infer_capture() {
+  local -r RESULTS_DIR="$1"
+  local -r INFER_OUTPUT_DIR="$2"
+
+  prepare_gcc_compilation_db_for_clang "$RESULTS_DIR"/combined_compilation_database.json
+
+  echo "Running capturing from compilation database (storing output in "$RESULTS_DIR"/infer_capture.log) ..."
+  while true; do
+    infer capture --keep-going -o "$INFER_OUTPUT_DIR" \
+      --compilation-database "$RESULTS_DIR"/combined_compilation_database.json &>"$RESULTS_DIR"/infer_capture.log
+
+    if needs_capturing_retry "$RESULTS_DIR/combined_compilation_database.json" "$RESULTS_DIR/infer_capture.log"; then
+      echo "Retrying capturing due to auto-fixed issues"
+      continue # Run the capture command again with a modified DB
+    fi
+
+    break # We cannot make capturing better automatically
+  done
+
 }
 
 # Get some stats, especially around coverage and failures
@@ -59,12 +102,7 @@ function evaluate_infer() {
     sed '$ s:},$:}:g' >>"$RESULTS_DIR"/combined_compilation_database.json
   echo "]" >>"$RESULTS_DIR"/combined_compilation_database.json
 
-  prepare_gcc_compilation_db_for_clang "$RESULTS_DIR"/combined_compilation_database.json
-
-  echo "Running capturing from compilation database (storing output in "$RESULTS_DIR"/infer_capture.log) ..."
-  infer capture --keep-going -o "$INFER_OUTPUT_DIR" \
-    --compilation-database "$RESULTS_DIR"/combined_compilation_database.json &>"$RESULTS_DIR"/infer_capture.log
-  grep " errors generated." "$RESULTS_DIR"/infer_capture.log | sort -u
+  infer_capture "$RESULTS_DIR" "$INFER_OUTPUT_DIR"
 
   # run analysis on combined output from "infer capture --continue" calls
   echo "Running infer analyze (storing output in "$RESULTS_DIR"/infer_analyze.log) ..."
