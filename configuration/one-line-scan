@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #  
 #  Licensed under the Apache License, Version 2.0 (the "License").
 #  You may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #
 # default arguments
 NOANALYSIS=              # by default, we use analysis
+ANALYSISONLY=            # by default, we will also build
 LINK=--link              # by default, enforce goto-ld for linking
 USE_AFL=                 # tell injection to also wrap for afl
 USE_GOTOCC=--use-gotocc  # tell injection to also wrap for goto-cc (CPROVER)
@@ -30,6 +31,7 @@ USE_SMATCH=              # tell injection to also wrap smatch
 USE_CPPCHECK=            # analyze with cppcheck
 FORTIFY_ANALYSIS_CONFIG= # extra options that should be passed to analysis of fortify
 USE_PLAIN=               # use a simple plain wrapper to log gcc calls
+USE_INFER=               # use a simple infer wrapper to log gcc calls
 EXPERT=                  # options that will be forwarded to the wrapper
 WORKINGDIR=OLS           # the default output directory
 USE_EXISTING=            # use output directory even if it exists already
@@ -103,6 +105,7 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --debug      (-d)     run in verbose mode and display commands before they are executed
     --continue   (-c)     continue with the build of a given directory and (re)perform analysis
     --no-analysis         only build, omit analysis
+    --analysis-only       do not build, but use the existing directory content to only run analysis
     --expert ARG          forward ARG directly to compiler wrapper setup
     --no-link             allow to fall back to native linker in case goto-ld fails
     --afl                 additionally apply compilation for fuzzing with AFL
@@ -111,6 +114,7 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --cppcheck            analyze with cppcheck
     --no-gotocc           disable default goto-cc compilation
     --plain               log compiler calls with plain wrapper
+    --infer               use infer for analysis
     --prefix PRF          additionally to gcc also wrap "PRF"gcc (will not be combined with suffix)
     --suffix SUF          additionally to gcc also wrap gcc"SUF" (will not be combined with prefix)
     --output DIR (-o DIR) set the output directory to DIR
@@ -149,6 +153,7 @@ do
     --help | -h)   usage; exit 0;;
     --debug | -d)  set -x;;
     --no-analysis) NOANALYSIS=t;;
+    --analysis-only) ANALYSISONLY=t; USE_EXISTING=--re-use;;
     --no-link)     LINK=;;
     --afl)         USE_AFL="--afl";;
     --cppcheck)    USE_CPPCHECK="--cppcheck" ;;
@@ -172,6 +177,7 @@ do
                    fi
                    ;;
     --plain)       USE_PLAIN="--plain";;
+    --infer)       USE_INFER="--infer";;
     --prefix)      if [ -n "$2" ]
                    then
                      TOOLPREFIX+=" --prefix $2"
@@ -299,7 +305,7 @@ then
   WRAPPER_SETUP_OPTIONS="--target "$WORKINGDIR" --origin "$BINARY_ORIGIN" \
     "$LINK" "$USE_EXISTING" "$USE_AFL" "$USE_FORTIFY" "$USE_SMATCH" \
     "$TOOLPREFIX" "$TOOLSUFFIX" -j $NUM_LOCKS "$EXTRA_INJECT_OPTIONS" "$EXTRA_CFLAGS" \
-    "$EXPERT" "$USE_GOTOCC"  $USE_CPPCHECK $USE_PLAIN"
+    "$EXPERT" "$USE_GOTOCC"  $USE_CPPCHECK $USE_PLAIN $USE_INFER"
   log $(echo "setting up wrapper with: $WRAPPER_SETUP_OPTIONS" | sed 's/  */ /g')
 
   # check whether the environment is actually usable for the wrapper injection
@@ -321,10 +327,16 @@ then
   # store information about the build environment
   storeEnvironmentInfo $WORKINGDIR "$@"
 
-  # execute the actual build, store stdout and stderr in build.log
-  log "execute build command"
-  "$@" \
-    > >(tee -a "$WORKINGDIR"/build.log) 2>&1 || BUILDRESULT=$?
+  if [ -z "$ANALYSISONLY" ]
+  then
+    # execute the actual build, store stdout and stderr in build.log
+    log "execute build command"
+    "$@" \
+      > >(tee -a "$WORKINGDIR"/build.log) 2>&1 || BUILDRESULT=$?
+  else
+    # we will not build
+    log "skipping build command"
+  fi
 
   # restore location to gcc, keep directory
   source $INJECT_TOOLS/remove-wrapper.sh --keep-dir
@@ -365,6 +377,14 @@ then
   log "evaluate plain wrapper ..."
   source "$SCRIPTDIR/backends/plain/plain-evaluate.sh"
   evaluate_plain || ANALYSISRESULT=$?
+fi
+
+# evaluate infer
+if [ -z "$NOANALYSIS" ] && [ -n "$USE_INFER" ]
+then
+  log "evaluate infer wrapper ..."
+  source "$SCRIPTDIR/backends/infer/infer-evaluate.sh"
+  evaluate_infer || ANALYSISRESULT=$?
 fi
 
 # evaluate fortify
