@@ -170,6 +170,8 @@ goto-instrument --bounds-check --pointer-check --memory-leak-check \
                 --signed-overflow-check --div-by-zero-check --undefined-shift-check \
                 --nan-check --float-overflow-check --stack-depth 10 \
                 --model-argc-argv 4 --conversion-check --uninitialized-check \
+                --unsigned-overflow-check --pointer-overflow-check \
+                --enum-range-check --pointer-primitive-check --race-check \
                 $FILENAME $TARGETBINARY > $INSTRUMENT_ERROR 2>&1 || INSTRUMENT_STATUS=$?
 log "instrumenting the binary finished with status: $INSTRUMENT_STATUS"
 if [ $INSTRUMENT_STATUS -ne 0 ]
