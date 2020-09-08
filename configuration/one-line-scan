@@ -46,6 +46,7 @@ TOOLPREFIX=              # might wrap a variant of gcc additionally to gcc
 TOOLSUFFIX=              # might wrap a variant of gcc additionally to gcc
 GITUPSTREAM=             # display findings only for commits made after this ID
 GITBRANCH=               # display findings only for commits until this point
+ADD_TO_PATH=             # add these values to the PATH environment variable before continuing
 
 
 # locate the script to be able to call related scripts
@@ -233,6 +234,13 @@ do
                     fi ;;
     --display-upstream) GITUPSTREAM="$2"; shift;;
     --display-branch)   GITBRANCH="$2"; shift;;
+    --add-to-path) if [ -n "$ADD_TO_PATH" ]
+                   then
+                     ADD_TO_PATH="$ADD_TO_PATH:$2"
+                   else
+                     ADD_TO_PATH="$2"
+                   fi
+                   shift;;
     --)            shift; break ;;
     *)             echo "warning: unknown parameter $1, have you forgotten the '--'? continue with build." 1>&2; break ;;
     esac
@@ -268,6 +276,9 @@ then
   log "error: cannot execute '$@', abort"
   exit 1
 fi
+
+# make more tools in path available
+[ -n "$ADD_TO_PATH" ] && export PATH=$PATH:$ADD_TO_PATH
 
 # relative path to gcc wrapper tools
 INJECT_TOOLS=$SCRIPTDIR/inject-gcc-wrapper
