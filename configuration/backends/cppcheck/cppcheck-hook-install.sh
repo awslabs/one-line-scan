@@ -76,7 +76,7 @@ inject_cppcheck()
     done
 
     # make the other compiler use the fortify wrapper
-    for TARGET_COMPILER in g++ clang clang++ cc c++
+    for TARGET_COMPILER in g++ clang clang++ cc c++ ${OLS_TARGET_COMPILER:-}
     do
       # might fail, because if check-setup.sh is used, the directory is already
       # there, as well as the links

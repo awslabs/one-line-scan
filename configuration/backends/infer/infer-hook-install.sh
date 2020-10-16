@@ -68,7 +68,7 @@ inject_infer() {
       done
 
       # make the other compiler use the fortify wrapper
-      for TARGET_COMPILER in g++ clang clang++ cc c++; do # as ld  # infer cannot do as and ld
+      for TARGET_COMPILER in g++ clang clang++ cc c++ ${OLS_TARGET_COMPILER:-}; do # as ld  # infer cannot do as and ld
         # might fail, because if check-setup.sh is used, the directory is already
         # there, as well as the links
         cp "$TARGET_GCC" "$INSTALL_DIR/${PREFIX}${TARGET_COMPILER}${SUFFIX}"

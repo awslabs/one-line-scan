@@ -38,6 +38,10 @@
 #
 #        source remove-wrapper.sh
 #
+# environment variables:
+#
+#        add extra target compiler to be wrapped, split multiple with space: OLS_TARGET_COMPILER
+#
 # do not return with first non-zero exit of a prorgamm call, as this would terminate the calling shell
 # set -e
 
