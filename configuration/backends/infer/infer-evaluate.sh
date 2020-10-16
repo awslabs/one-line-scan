@@ -106,14 +106,21 @@ function evaluate_infer() {
 
   # run analysis on combined output from "infer capture --continue" calls
   echo "Running infer analyze (storing output in "$RESULTS_DIR"/infer_analyze.log) ..."
+  local -i INFER_ANALYSIS_STATUS=0
   infer analyze \
     --keep-going \
-    --bufferoverrun \
-    --litho \
-    --pulse \
-    --quandary \
-    --quandaryBO \
-    -o "$INFER_OUTPUT_DIR" &>"$RESULTS_DIR"/infer_analyze.log
+    -o "$INFER_OUTPUT_DIR" &>"$RESULTS_DIR"/infer_analyze.log || INFER_ANALYSIS_STATUS=$?
+
+  # for now, only use what is enabled by default!
+  #    --bufferoverrun \
+  #    --cost \
+  #    --pulse \
+  #    --quandary \
+
+  # Handle errors
+  if [ "$INFER_ANALYSIS_STATUS" -ne 0 ]; then
+    echo "There has been an error during analysis, please check: $RESULTS_DIR/infer_analyze.log"
+  fi
 
   # Other, potentially relevant, parameter to infer analyze:
   #     --purity \
