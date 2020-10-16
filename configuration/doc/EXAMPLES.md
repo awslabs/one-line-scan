@@ -26,6 +26,17 @@ To store log files and results in another directory, the -o flag can be used:
 
  one-line-scan --no-analysis -o OLS -- make
 
+To add another run to the same output directory, depending on whether you want
+to keep the files from the previous run or not. To keep them, add the flag
+--use-existing, otherwise --trunc-existing. Example calls are as follows:
+
+ one-line-scan --no-analysis -o OLS -- gcc 1.c -o 1.o
+ one-line-scan --no-analysis -o OLS --use-existing -- gcc 2.c -o 2.o
+
+# Example Calls for Available Backends
+
+This section lists example calls for different backends.
+
 ## Plain Backend - Spot Failing Compiler Calls
 
 A use case of the plain backend is to trace failing compiler calls on a project
