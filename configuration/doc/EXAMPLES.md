@@ -60,3 +60,23 @@ x86_64-unknown-linux-gcc can be used, as well as other cross-compilers. To use
 such a compiler, the --prefix parameter can be added.
 
  one-line-scan --fortify --no-gotocc --prefix x86_64-unknown-linux- -- make
+
+## Infer Backend
+
+The infer backend is enabled with the parameter "--infer". As Infer calls are
+happening inside one-line-scan, it might be hard to add additional analysis
+options to Infer. The below environment variable INFER_ANALYSIS_EXTRA_ARGS can
+be used to forward analysis options.
+
+Cmake allows to dump a compilation database, which is supported to be consumed
+by Infer. In combination with non-gcc compilers, this setup is still
+challenging. This case is supported by one-line-scan as follows, assuming the
+additional compiler is called 'new-compiler' like below.
+
+The following commands can be used to run Infer on a project with compiler
+'new-compiler', and with extra analysis options '--bufferoverrun'.
+
+  one-line-scan -o OLS --use-existing --no-gotocc --infer --no-analysis -- cmake
+  INFER_ANALYSIS_EXTRA_ARGS="--bufferoverrun" \
+      OLS_TARGET_COMPILER="my-compiler" \
+      one-line-scan -o OLS --use-existing --no-gotocc --inter -- make
