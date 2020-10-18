@@ -140,7 +140,8 @@ space.
 Different backends currently support different mechanisms for customization.
 While CBMC and Fortify have CLI parameters for customization, Infer uses the
 environment variable INFER_ANALYSIS_EXTRA_ARGS to pass cli parameter to the
-Infer analysis call.
+Infer analysis call. For CppCheck, the environment variable CPPCHECK_EXTRA_ARG
+allows to add more CLI parameters to the tool.
 
 ## License
 
