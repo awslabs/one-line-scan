@@ -80,7 +80,7 @@ inject_afl()
   perl -p -i -e "s:NATIVE_GPP=/bin/false:NATIVE_GPP=$(find_native g++):" "$TARGET_GCC"
   perl -p -i -e "s:NATIVE_CLANGPP=/bin/false:NATIVE_CLANGPP=$(find_native clang++):" "$TARGET_GCC"
 
-  for t in clang afl-clang g++ afl-g++ clang++ afl-clang++
+  for t in clang afl-clang g++ afl-g++ clang++ afl-clang++ ${OLS_TARGET_COMPILER:-}
   do
     cp "$TARGET_GCC" "$GOTO_GCC_WRAPPER_INSTALL_DIR/AFL/$t"
   done

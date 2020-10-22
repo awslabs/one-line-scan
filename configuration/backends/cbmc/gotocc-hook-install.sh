@@ -115,7 +115,7 @@ inject_gotocc()
     done
 
     # also use the wrapper for ld, ar, cc, c++
-    for t in ld ar cc c++
+    for t in ld ar cc c++ ${OLS_TARGET_COMPILER:-}
     do
       cp "$GOTO_GCC_WRAPPER_INSTALL_DIR/""$PREFIX"gcc"$SUFFIX" "$GOTO_GCC_WRAPPER_INSTALL_DIR/""$PREFIX"$t"$SUFFIX"
     done

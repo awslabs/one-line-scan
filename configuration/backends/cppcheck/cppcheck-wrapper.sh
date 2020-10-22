@@ -25,14 +25,14 @@ NATIVE_CLANG=/bin/false
 NATIVE_CLANGPP=/bin/false
 TOOLPREFIX=
 TOOLSUFFIX=
-CPPCHECK_EXTRA_ARG=
+CPPCHECK_EXTRA_ARG="${CPPCHECK_EXTRA_ARG:-}"
 CALL_DIR=
 
 
 # options to be passed to cppcheck
-CHECK_CONFIG="--error-exitcode=-1 --quiet --force"
-CHECK_CONFIG+=" --enable=warning --enable=style --enable=performance"
-CHECK_CONFIG+=" --enable=information --enable=portability --inconclusive"
+CHECK_CONFIG="--error-exitcode=-1 --quiet --force --enable=warning"
+# CHECK_CONFIG+=" --enable=style --enable=performance"
+# CHECK_CONFIG+=" --enable=information --enable=portability --inconclusive"
 # CHECK_CONFIG+=" --check-config"  # enable to see problems with setup
 CHECK_CONFIG+="$CPPCHECK_EXTRA_ARG"
 

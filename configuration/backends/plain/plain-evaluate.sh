@@ -21,7 +21,7 @@ function evaluate_plain
   local -r REPLAYLOG="$RESULTS_DIR/replay.log"
   local -r CMDB="$RESULTS_DIR"/compilation_database.json
 
-  if [ -n "$(find "$RESULTS_DIR"/compilation_databases -name "*.json")" ]
+  if [ -n "$(find "$RESULTS_DIR"/compilation_databases -name "*.json" 2> /dev/null)" ]
   then
     echo "Combining compilation databases into a single one ..."
     echo "[" > "$CMDB"
