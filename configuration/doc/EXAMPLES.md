@@ -51,6 +51,15 @@ actually issued, have a look into the failed_calls.log file:
 
     cat PLAIN/plain/failed_calls.log
 
+Another use case for the plain wrapper is to modify the compiler parameters, for
+example enabling additional warnings while not making them fatal, as well as
+adding sanitizers to an existing setup for testing. This can be achieved with
+the following call:
+
+     one-line-scan --plain --no-gotocc -o PLAIN \
+         --extra-cflag-set "-Wno-error -Wextra -fsanitize=undefined" \
+         -- make
+
 ## Fortify Backend
 
 To analyze C/C++ projects with Fortify, the used compiler has to be gcc.
