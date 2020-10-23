@@ -90,3 +90,53 @@ The following commands can be used to run Infer on a project with compiler
     INFER_ANALYSIS_EXTRA_ARGS="--bufferoverrun" \
         OLS_TARGET_COMPILER="my-compiler" \
         one-line-scan -o OLS --use-existing --no-gotocc --inter -- make
+
+# Example Calls for One-Line-CR-Bot
+
+This section demonstrates how defects for a commit series can be reported. To
+see the full list of commands, see the command-line help output. This command
+will also show the default values for all the parameters.
+
+    one-line-cr-bot.sh -h
+
+Parameters can be set either via the command line, or via environment variables.
+Environment variables allow a more verbose setup, in that they represent the
+configuration to be modified in a more human-readable way. For a project that
+uses gcc as the compiler, and builds with "make", and uses "make clean" for
+cleaning, the following line would present defects introduced since commit
+origin/mainline:
+
+    one-line-cr-bot.sh -B origin/mainline -b "make" -c "make clean"
+
+To temporarily install Infer and CppCheck as well, as well as seeing the full
+set of defects for the current commit, -I and -v can be added:
+
+    one-line-cr-bot.sh -B origin/mainline -b "make" -c "make clean" -I -v
+
+As defect matching is currently done based on file name and line number, this
+call might still report too many defects as new defects, as it will also report
+defects that just moved. To suppress this behavior, another filtering mechanism
+can be used:
+
+    one-line-cr-bot.sh -B origin/mainline -b "make" -c "make clean" -I -n -v
+
+Using environment variables, the same call would look as follows:
+
+    BASE_COMMIT="origin/mainline" \
+      BUILD_COMMAND="make" \
+      CLEAN_COMMAND="make clean" \
+      REPORT_NEW_ONLY="true" \
+      VERBOSE=1 \
+      one-line-cr-bot.sh
+
+In case you do not want to run Infer or CppCheck, tools can be disabled or
+enabled separately. To disable Infer, the following command can be used:
+
+    one-line-cr-bot.sh -B origin/mainline -b "make" -c "make clean" -D Infer
+
+You can also forward parameters to one-line-scan and its backends as explained
+above, by using the environment variables for the backends, as well as the
+parameter -O:
+
+    one-line-cr-bot.sh -B origin/mainline -b "make" -c "make clean" \
+        -O "--suffix -10"

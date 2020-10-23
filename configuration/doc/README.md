@@ -39,6 +39,30 @@ By default, the wrapper for CBMC is enabled. Furthermore, analysis is enabled by
 default. To disable CBMC, use --no-gotocc, and to disable analysis, use the
 parameter --no-analysis.
 
+### Analyzing Git Series
+
+During development of a feature, only defects that are introduced by the current
+change might be of interest. We provide a wrapper around one-line-scan, which
+allows to present only these findings. For analysis, we support Infer and
+CppCheck, and support the same customization as for plain one-line-scan calls.
+
+In case your environment does not have Infer and CppCheck installed already,
+the script will get release tar balls from github, and install the tools
+temporarily. If you want to run this analysis more frequently, consider
+installing these tools on your system permanently (see e.g. the script how this
+can be done).
+
+A simple analysis of the current state compared to the commit origin/mainline
+would be:
+
+    one-line-cr-bot.sh -B origin/mainline -b "make" -c "make clean" -I -n -v
+
+This command builds the project with "make", uses "make clean" for cleaning
+build artifacts, installs missing tools, tries to be conservative wrt presenting
+new defects, and shows defects that are present in the current state along with
+the introduced defects. More example calls can be found in the example call
+description [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/configuration/doc/EXAMPLES.md.
+
 ## How It Works
 
 The tool one-line-scan places wrappers for common compilers like gcc, clang, as
