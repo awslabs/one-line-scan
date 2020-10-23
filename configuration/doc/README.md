@@ -62,6 +62,8 @@ build artifacts, installs missing tools, tries to be conservative wrt presenting
 new defects, and shows defects that are present in the current state along with
 the introduced defects. More example calls can be found in the example call
 description [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/configuration/doc/EXAMPLES.md.
+Examples how to integrate this script into further automation to create reports
+of new defects automatically, check [doc/ONELINECRBOT.md](https://github.com/awslabs/one-line-scan/blob/master/configuration/doc/ONELINECRBOT.md).
 
 ## How It Works
 
