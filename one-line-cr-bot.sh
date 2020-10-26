@@ -26,7 +26,7 @@ BUILD_COMMAND="${BUILD_COMMAND:-make -B}"
 CLEAN_COMMAND="${CLEAN_COMMAND:-make clean}"
 DEBUG="${DEBUG:-}"
 INFER_VERSION="${INFER_VERSION:-1.0.0}" # currently, we only support v1.0.0
-INGORE_ERRORS="${INGORE_ERRORS:-false}"
+IGNORE_ERRORS="${IGNORE_ERRORS:-false}"
 INSTALL_MISSING="${INSTALL_MISSING:-false}"
 ONELINESCAN_PARAMS="${ONELINESCAN_PARAMS:-}"
 OUTPUT_FILE="${OUTPUT_FILE:-}"
@@ -107,7 +107,7 @@ the default value for certain CLI parameters.
   -p .......... post findings to github PR that triggered the workflow
                 (default: $POST_TO_GITHUB_PR, env POST_TO_GITHUB_PR)
   -y .......... ignore analysis errors
-                (default: $INGORE_ERRORS, env: INGORE_ERRORS)
+                (default: $IGNORE_ERRORS, env: IGNORE_ERRORS)
 
   -h .......... print this help message
   -I .......... Try to install missing tools, if they cannot be found.
@@ -469,7 +469,7 @@ while getopts "0b:B:c:dD:E:fhIno:O:pvW:y" opt; do
         VERBOSE=$((VERBOSE + 1))
         ;;
     y)
-        INGORE_ERRORS="true"
+        IGNORE_ERRORS="true"
         ;;
     :)
         echo "Option -$OPTARG requires an argument." >&2
@@ -553,9 +553,8 @@ if [ "$POST_TO_GITHUB_PR" == "true" ]; then
     "$SCRIPT_DIR"/configuration/utils/comment-github-pr.py -r "$OUTPUT_FILE" || OVERALL_STATUS="$?"
 fi
 
-
 # ignore errors, if requested
-[ "$INGORE_ERRORS" == "true" ] && exit 0
+[ "$IGNORE_ERRORS" == "true" ] && exit 0
 
 # All steps we ran worked, signal success
 if [ "$DEFECT_STATUS" -eq 0 ]; then
