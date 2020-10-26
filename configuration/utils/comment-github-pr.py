@@ -32,6 +32,14 @@ def parse_cli():
     )
 
     parser.add_argument(
+        "-R",
+        "--report-zero",
+        help="Also report if there have not been any defects",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
         "-s",
         "--summary",
         help="Only comment a summary of the report",
@@ -46,7 +54,7 @@ def parse_cli():
     return args
 
 
-def markdownify_gcc_report(report_file, summary=False):
+def markdownify_gcc_report(report_file, summary=False, report_zero=False):
     """This method assumes this script is invoked in a github workflow"""
 
     try:
@@ -58,23 +66,32 @@ def markdownify_gcc_report(report_file, summary=False):
     nr_findings = len(findings)
     files = set([x.split(":")[0] for x in findings])
 
-    # Write a basic summary of the findings
-    markdown_message = "One Line Scan: **reported {} findings** in {} files".format(
-        nr_findings, len(files)
-    )
+    markdown_message = ""
 
-    # Add task list with all findings
-    if not summary:
-        markdown_message += "\n\n"
-        for finding in findings:
-            markdown_message += "- [ ] {}\n".format(finding.rstrip())
-        markdown_message += "\n\n"
+    # Do we need to report findings?
+    if nr_findings > 0 or report_zero:
+
+        # Write a basic summary of the findings
+        markdown_message = "One Line Scan: **reported {} findings** in {} files".format(
+            nr_findings, len(files)
+        )
+
+        # Add task list with all findings
+        if not summary:
+            markdown_message += "\n\n"
+            for finding in findings:
+                markdown_message += "- [ ] {}\n".format(finding.rstrip())
+            markdown_message += "\n\n"
 
     return markdown_message, 0
 
 
 def comment_on_github_pr(message):
     """Comment on a PR. (assumes the script is invoked in a github workflow)"""
+
+    # There is no message to be reported, skip
+    if not message:
+        return 0
 
     # Check whether called via workflow
     token = os.getenv("GITHUB_TOKEN")
@@ -120,7 +137,9 @@ def main():
 
     args = parse_cli()
 
-    markdown_message, ret = markdownify_gcc_report(args["report_file"], args["summary"])
+    markdown_message, ret = markdownify_gcc_report(
+        args["report_file"], args["summary"], args["report_zero"]
+    )
     log.info("Message to be posted: \n===\n%s===\n", markdown_message)
 
     if ret == 0:
