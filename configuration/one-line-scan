@@ -90,7 +90,7 @@ storeEnvironmentInfo()
   echo "Content of the calling directory:" >> $LOG
   ls -lh >> $LOG 2>&1
   echo "Environment variables:" >> $LOG
-  env >> $LOG 2>&1
+  echo "Path: $PATH" >> $LOG 2>&1
 }
 
 usage()
