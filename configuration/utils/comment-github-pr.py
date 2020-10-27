@@ -124,13 +124,17 @@ def comment_on_github_pr(message):
 
     # Get pull request object for current event
     # https://pygithub.readthedocs.io/en/latest/github_objects/PullRequest.html
-    pull_request_number = event["pull_request"]["number"]
-    pull_request = repo.get_pull(int(pull_request_number))
-    # Enable to see API
-    # log.info("pull request: %r", dir(pull_request))
+    pr_event = event.get("pull_request")
+    if pr_event:
+        pull_request_number = pr_event["number"]
+        pull_request = repo.get_pull(int(pull_request_number))
+        # Enable to see API
+        # log.info("pull request: %r", dir(pull_request))
 
-    # Create and post message to comment stream
-    pull_request.create_issue_comment(message)
+        # Create and post message to comment stream
+        pull_request.create_issue_comment(message)
+    else:
+        log.info("Current event is not a pull request, do not comment.")
 
 
 def main():
