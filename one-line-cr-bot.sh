@@ -348,8 +348,8 @@ analyze_project_commit() {
 
     # if there is a commit to work with, look into this commit
     if [ -n "$COMMIT" ]; then
-        git checkout "$COMMIT" &>/dev/null || exit $?
-        git submodule update --init --recursive &>/dev/null
+        git checkout -q "$COMMIT" || exit $?
+        git submodule --quiet update --init --recursive
     fi
 
     local -i BUILD_STATUS=0
