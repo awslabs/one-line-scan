@@ -170,7 +170,8 @@ check_environment() {
     # Print the version output of the available tools
     echo "Versions of used tools:" 1>&2
     for tool in "${SUPPORTED_TOOLS[@]}"; do
-        if ! command -v "$tool" &>/dev/null && [ "${RUN_TOOL["${tool^^}"]}" == "true" ]; then
+        [ "${RUN_TOOL["${tool^^}"]}" != "true" ] && continue
+        if ! command -v "$tool" &>/dev/null; then
             echo "Error: Failed to find tool $tool, which has been activated. Abort" 1>&2
             ret=1
         else
@@ -286,11 +287,11 @@ setup_environment() {
 
     # Install tools, in case they are not present already
     if [ "$INSTALL_MISSING" == "true" ]; then
-        if ! command -v infer &>/dev/null; then
+        if ! command -v infer &>/dev/null && [ "${RUN_TOOL["INFER"]}" == "true" ]; then
             setup_infer "$TMP_DATA_FOLDER" || return $?
         fi
 
-        if ! command -v cppcheck &>/dev/null; then
+        if ! command -v cppcheck &>/dev/null && [ "${RUN_TOOL["CPPCHECK"]}" == "true" ]; then
             setup_cppcheck "$TMP_DATA_FOLDER" || return $?
         fi
     fi
