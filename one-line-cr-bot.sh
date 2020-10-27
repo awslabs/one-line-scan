@@ -522,12 +522,12 @@ if [ -n "$BASE_COMMIT" ]; then
             if [ "$REPORT_NEW_ONLY" == "true" ]; then
                 "$SCRIPT_DIR"/configuration/utils/extract_introduced_gcc_style.py \
                     "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt \
-                    "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt | tee -a "$OUTPUT_FILE"
+                    "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt | tee "$OUTPUT_FILE"
                 DEFECT_STATUS="${PIPESTATUS[0]}"
             else
                 diff --new-line-format="" --unchanged-line-format="" \
                     "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt \
-                    "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt | tee -a "$OUTPUT_FILE"
+                    "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt | tee "$OUTPUT_FILE"
                 DEFECT_STATUS="${PIPESTATUS[0]}"
             fi
             echo -e "\n\n"
