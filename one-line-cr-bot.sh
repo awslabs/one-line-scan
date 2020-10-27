@@ -32,6 +32,7 @@ ONELINESCAN_PARAMS="${ONELINESCAN_PARAMS:-}"
 OUTPUT_FILE="${OUTPUT_FILE:-}"
 OVERRIDE_ANALYSIS_ERROR="${OVERRIDE_ANALYSIS_ERROR:-false}"
 POST_TO_GITHUB_PR="${POST_TO_GITHUB_PR:-false}"
+POST_TO_GITHUB_PR_ONLY="${POST_TO_GITHUB_PR_ONLY:-false}"
 REPORT_NEW_ONLY="${REPORT_NEW_ONLY:-false}"
 WORK_COMMIT="${WORK_COMMIT:-}"
 declare -i VERBOSE
@@ -106,6 +107,9 @@ the default value for certain CLI parameters.
                 (default: $ONELINESCAN_PARAMS, env: ONELINESCAN_PARAMS)
   -p .......... post findings to github PR that triggered the workflow
                 (default: $POST_TO_GITHUB_PR, env POST_TO_GITHUB_PR)
+  -P .......... post findings to github PR that triggered the workflow, and
+                indicate success of the execution, independently of new defects
+                (default: $POST_TO_GITHUB_PR_ONLY, env: POST_TO_GITHUB_PR_ONLY)
   -y .......... ignore analysis errors
                 (default: $IGNORE_ERRORS, env: IGNORE_ERRORS)
 
@@ -412,7 +416,7 @@ if [ -z "$WORK_COMMIT" ]; then
     [ -z "$WORK_COMMIT" -o "$WORK_COMMIT" == "HEAD" ] && WORK_COMMIT=$(git rev-parse HEAD)
 fi
 
-while getopts "0b:B:c:dD:E:fhIno:O:pvW:y" opt; do
+while getopts "0b:B:c:dD:E:fhIno:O:pPvW:y" opt; do
     case $opt in
     b)
         BUILD_COMMAND="$OPTARG"
@@ -461,6 +465,9 @@ while getopts "0b:B:c:dD:E:fhIno:O:pvW:y" opt; do
         ;;
     p)
         POST_TO_GITHUB_PR="true"
+        ;;
+    P)
+        POST_TO_GITHUB_PR_ONLY="true"
         ;;
     W)
         WORK_COMMIT="$OPTARG"
@@ -548,9 +555,10 @@ else
 fi
 
 # post comment to PR?
-if [ "$POST_TO_GITHUB_PR" == "true" ]; then
+if [ "$POST_TO_GITHUB_PR" == "true" ] || [ "$POST_TO_GITHUB_PR_ONLY" == "true" ]; then
     touch "$OUTPUT_FILE"
     "$SCRIPT_DIR"/configuration/utils/comment-github-pr.py -r "$OUTPUT_FILE" || OVERALL_STATUS="$?"
+    [ "$POST_TO_GITHUB_PR_ONLY" == "true" ] && DEFECT_STATUS=0
 fi
 
 # ignore errors, if requested
