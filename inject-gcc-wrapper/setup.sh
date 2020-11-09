@@ -410,11 +410,14 @@ then
     fi
 
     # wrap goto-(g)cc
-    if load_tools
+    if [ -n "$WRAP_GOTOCC" ]
     then
-      # run the actual injection
-      source "$SOURCE_DIR/../backends/cbmc/gotocc-hook-install.sh"
-      [ -z "$WRAP_GOTOCC" ] || inject_gotocc
+      if load_tools
+      then
+        # run the actual injection
+        source "$SOURCE_DIR/../backends/cbmc/gotocc-hook-install.sh"
+        [ -z "$WRAP_GOTOCC" ] || inject_gotocc
+      fi
     fi
   fi
 fi
