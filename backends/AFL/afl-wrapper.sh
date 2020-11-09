@@ -29,7 +29,8 @@ NATIVE_AFL_PATH=
 
 # load the library
 SCRIPT=$(readlink -e "$0")
-source $(dirname $SCRIPT)/../ols-library.sh || exit 1
+SCRIPT_DIR=$(dirname $SCRIPT)
+source "$SCRIPT_DIR"/../ols-library.sh || exit 1
 
 # arguments that should be added to the compiler (DO NOT TOUCH)
 GCCEXTRAARGUMENTS=
@@ -38,7 +39,8 @@ GCCEXTRAARGUMENTS=
 WRAPPERPIDFILE=/tmp/AFL-wrapper-pid
 
 # if log file is not empty, store logging
-LOG=log
+mkdir -p "$SCRIPT_DIR"/log
+LOG="$SCRIPT_DIR"/log/build.log
 
 #
 # start of the script
@@ -137,13 +139,13 @@ touch "$WRAPPERPIDFILE$$"
 # use the actual AFL binary
 case "$binary_name" in
   "gcc" | "g++" | "clang" | "clang++" | "as" )
-    logwrapper AFL-GCC "call actual tool:$NATIVE_AFL_PATH/afl-$binary_name $@ $GCCEXTRAARGUMENTS"
+    logwrapper AFL-GCC "call actual tool: $NATIVE_AFL_PATH/afl-$binary_name $@ $GCCEXTRAARGUMENTS"
     [ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
     "$NATIVE_AFL_PATH"/afl-"$binary_name" "$@" $GCCEXTRAARGUMENTS
     exit $?
     ;;
   "afl-gcc" | "afl-g++" | "afl-clang" | "afl-clang++" | "afl-as" )
-    logwrapper AFL-GCC "call actual tool:$NATIVE_AFL_PATH/$binary_name $@ $GCCEXTRAARGUMENTS"
+    logwrapper AFL-GCC "call actual tool: $NATIVE_AFL_PATH/$binary_name $@ $GCCEXTRAARGUMENTS"
     [ $REDIRECT_STDIN -ne 1 ] || exec 0<&4 4<&-
     "$NATIVE_AFL_PATH"/"$binary_name" "$@" $GCCEXTRAARGUMENTS
     exit $?
