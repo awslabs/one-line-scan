@@ -113,6 +113,8 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --fortify             run HP Fortify's sourcecodeanalyzer
     --smatch              run smatch (use the SMATCH_EXTRA_ARG environment variable to forward parameter to smatch)
     --cppcheck            analyze with cppcheck
+    --cbmc                compile project with cbmc's compiler gotocc
+    --gotocc              compile project with cbmc's compiler gotocc [same as --cbmc]
     --no-gotocc           disable default goto-cc compilation
     --plain               log compiler calls with plain wrapper
     --infer               use infer for analysis
@@ -168,6 +170,7 @@ do
                       fi
                       ;;
     --smatch)      USE_SMATCH="--smatch";;
+    --cbmc|--gotocc) USE_GOTOCC="--use-gotocc";;
     --no-gotocc)   USE_GOTOCC="--no-gotocc";;
     --expert)      if [ -n "$2" ]
                    then

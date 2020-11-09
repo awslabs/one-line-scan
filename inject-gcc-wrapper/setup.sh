@@ -78,6 +78,7 @@ parse_arguments ()
     --fortify)    WRAP_FORTIFY=t;;
     --smatch)     WRAP_SMATCH=t;;
     --no-gotocc)  WRAP_GOTOCC=;;
+    --use-gotocc) WRAP_GOTOCC=1;;
     --plain)      WRAP_PLAIN=t;;
     --infer)      WRAP_INFER=1;;
     --link)       GOTO_GCC_WRAPPER_ENFORCE_GOTO_LINKING=t ;;
