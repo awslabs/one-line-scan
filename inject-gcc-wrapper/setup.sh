@@ -227,7 +227,7 @@ load_tools()
   if [ -n "$WRAP_GOTOCC" ]
   then
     if [ ! -x "$GOTO_GCC_NATIVE_COMPILER" ] || [ ! -x "$GOTO_GCC_NATIVE_LINKER" ]\
-      || [ ! -x "$GOTO_GCC_BINARY" ] || [ ! -x "$GOTO_LD_BINARY" ] \
+      || [ ! -x "$GOTO_GCC_BINARY" ] \
       || [ ! -x "$GOTO_GCC_NATIVE_AR" ]
     then
       echo "error: did not find all necessary tools in the PATH environment"
