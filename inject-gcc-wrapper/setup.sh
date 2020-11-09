@@ -348,6 +348,7 @@ nested_wrappers()
 # main script
 #
 # only execute, if options can be parsed and all necessary tools can be found
+declare -i INJECTED_BACKENDS=0
 if parse_arguments "$@" && load_native_compilers
 then
 
@@ -362,6 +363,7 @@ then
       source "$SOURCE_DIR/../backends/cppcheck/cppcheck-hook-install.sh"
       inject_cppcheck
       load_compilers
+      INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
     fi
 
     # wrap plain
@@ -370,6 +372,7 @@ then
       source "$SOURCE_DIR/../backends/plain/plain-hook-install.sh"
       inject_plain
       load_compilers
+      INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
     fi
 
     # wrap infer
@@ -378,6 +381,7 @@ then
       source "$SOURCE_DIR/../backends/infer/infer-hook-install.sh"
       inject_infer
       load_compilers
+      INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
     fi
 
     # wrap Fortify
@@ -388,6 +392,7 @@ then
       # need to re-load the compiler locations, as Fortify wrappers have been installed
       load_compilers
       [ -z "$NESTED" ] || nested_wrappers Fortify
+      INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
     fi
 
     # wrap smatch
@@ -398,6 +403,7 @@ then
       # need to re-load the compiler locations, as smatch wrappers have been installed
       load_compilers
       [ -z "$NESTED" ] || nested_wrappers smatch
+      INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
     fi
 
     # wrap AFL
@@ -407,6 +413,7 @@ then
         inject_afl
         load_compilers
         [ -z "$NESTED" ] || nested_wrappers AFL
+      INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
     fi
 
     # wrap goto-(g)cc
@@ -417,7 +424,14 @@ then
         # run the actual injection
         source "$SOURCE_DIR/../backends/cbmc/gotocc-hook-install.sh"
         [ -z "$WRAP_GOTOCC" ] || inject_gotocc
+        INJECTED_BACKENDS=$((INJECTED_BACKENDS+1))
       fi
     fi
   fi
+fi
+
+echo "info: injected $INJECTED_BACKENDS backends"
+if [ "$INJECTED_BACKENDS" -eq 0 ]
+then
+  echo "warning: make sure to inject backends. Use --help to see more details!"
 fi
