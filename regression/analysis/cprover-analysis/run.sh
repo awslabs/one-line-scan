@@ -7,7 +7,7 @@ export CBMC_UNWIND=17
 export CBMC_DEPTH=10000
 
 # perform the analysis
-../../../one-line-scan -o SP -- gcc main.c -o buggy
+../../../one-line-scan -o SP --cbmc -- gcc main.c -o buggy
 
 # show log of binary analysis
 FAILS=$(grep ": FAILURE" SP/log/violation/buggy-d$CBMC_DEPTH-uw$CBMC_UNWIND.cbmc.log | wc -l)

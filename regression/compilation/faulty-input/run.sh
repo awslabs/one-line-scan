@@ -3,7 +3,7 @@
 
 # make sure we run on a clean environment (otherwise we fail with "SP" exists)
 rm -rf SP
-../../../one-line-scan -o SP -- gcc fail.c
+../../../one-line-scan -o SP --cbmc -- gcc fail.c
 
 # did we produce faulty input files?
 ls SP/faultyInput/*
