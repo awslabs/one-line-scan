@@ -10,7 +10,7 @@ rm -rf src/T
 
 pushd src
 STATUS=0
-../../../../configuration/one-line-scan --cppcheck -o T --no-gotocc -- make &> output.log || STATUS=$?
+../../../../one-line-scan --cppcheck -o T --no-gotocc -- make &> output.log || STATUS=$?
 
 if [ "$STATUS" -eq 0 ]
 then

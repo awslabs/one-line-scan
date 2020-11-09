@@ -344,7 +344,7 @@ show_findings_for_series() {
     [ ! -r "$TMP_DATA_FOLDER"/findings.txt ] && return 0
     sort -u -V "$TMP_DATA_FOLDER"/findings.txt >"$TMP_DATA_FOLDER"/sorted-findings.txt 2>/dev/null
 
-    "$TMP_DATA_FOLDER"/one-line-scan/configuration/utils/display-series-data.sh "$TMP_DATA_FOLDER"/sorted-findings.txt "$BASE_COMMIT"
+    "$TMP_DATA_FOLDER"/one-line-scan/utils/display-series-data.sh "$TMP_DATA_FOLDER"/sorted-findings.txt "$BASE_COMMIT"
 }
 
 # analyze a project for a given commit
@@ -521,7 +521,7 @@ if [ -n "$BASE_COMMIT" ]; then
             [ -r "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt ]; then
             echo -e "\n\nAll findings worth reporting as introduced:"
             if [ "$REPORT_NEW_ONLY" == "true" ]; then
-                "$SCRIPT_DIR"/configuration/utils/extract_introduced_gcc_style.py \
+                "$SCRIPT_DIR"/utils/extract_introduced_gcc_style.py \
                     "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt \
                     "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt | tee "$OUTPUT_FILE"
                 DEFECT_STATUS="${PIPESTATUS[0]}"
@@ -558,7 +558,7 @@ fi
 # post comment to PR?
 if [ "$POST_TO_GITHUB_PR" == "true" ] || [ "$POST_TO_GITHUB_PR_ONLY" == "true" ]; then
     touch "$OUTPUT_FILE"
-    "$SCRIPT_DIR"/configuration/utils/comment-github-pr.py -r "$OUTPUT_FILE" || OVERALL_STATUS="$?"
+    "$SCRIPT_DIR"/utils/comment-github-pr.py -r "$OUTPUT_FILE" || OVERALL_STATUS="$?"
     [ "$POST_TO_GITHUB_PR_ONLY" == "true" ] && DEFECT_STATUS=0
 fi
 
