@@ -1,0 +1,54 @@
+# Author: Norbert Manthey <nmanthey@amazon.de>
+#
+# Check whether all current tests work.
+
+name: Regression tests
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+  push:
+    branches: [ mainline ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # This is to address CVE-2020-15228 proactively. We do not rely on stdout.
+    - name: Disable workflow commands
+      run: echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+
+    # Get the code, fetch the full history to make sure we have the compare commit as well
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        ref: ${{github.event.pull_request.head.ref}}
+        repository: ${{github.event.pull_request.head.repo.full_name}}
+
+    # one-line-cr-bot.sh will get infer and cppcheck, if not available
+    - name: Install Required Packages
+      env:
+        # This is needed in addition to -yq to prevent apt-get from asking for user input
+        DEBIAN_FRONTEND: noninteractive
+      # [ACTION REQUIRED] Add your build dependencies here
+      run: |
+        sudo apt-get install -y cppcheck afl cbmc
+
+    # Run regression test suite
+    - name: check environment
+      # Be explicit about the tools to be used
+      run: |
+        which afl-fuzz afl-gcc cbmc cppcheck gcc git goto-gcc goto-cc || true
+        afl-gcc --version || true
+        gcc --version || true
+        goto-cc --version || true
+        cppcheck --version || true
+
+    # Run regression test suite
+    - name: one-line-cr-analysis
+      # Be explicit about the tools to be used
+      run: make -C regression
