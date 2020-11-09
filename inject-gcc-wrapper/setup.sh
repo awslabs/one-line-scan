@@ -228,7 +228,7 @@ load_tools()
   then
     if [ ! -x "$GOTO_GCC_NATIVE_COMPILER" ] || [ ! -x "$GOTO_GCC_NATIVE_LINKER" ]\
       || [ ! -x "$GOTO_GCC_BINARY" ] || [ ! -x "$GOTO_LD_BINARY" ] \
-      || [ ! -x "$GOTO_GCC_NATIVE_AR" ] || [ ! -x "$GOTO_DIFF_BINARY" ]
+      || [ ! -x "$GOTO_GCC_NATIVE_AR" ]
     then
       echo "error: did not find all necessary tools in the PATH environment"
       echo "gcc:      $GOTO_GCC_NATIVE_COMPILER"

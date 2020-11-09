@@ -258,13 +258,16 @@ function checkIncludes
       local inc=$(sed -n "${l}p" "$f" | \
                   sed -e 's/^.*#include[[:space:]]*[<"]//' \
                       -e 's/[>"][[:space:]]*$//')
-      if $GOTO_DIFF_BINARY -u "$tmpfile.o" "${tmpfile}-i.o" | grep -q "^[+-]"
+      if [ "$GOTO_DIFF_BINARY" != "XX/usr/bin/goto-diffXX" ]
       then
-        echo "$f:$l: warning: code compiles both with and without $inc, but instructions differ" \
-          | tee -a "$LOG"
-      else
-        echo "$f:$l: warning: (not) including $inc has no effect" \
-          | tee -a "$LOG"
+        if $GOTO_DIFF_BINARY -u "$tmpfile.o" "${tmpfile}-i.o" | grep -q "^[+-]"
+        then
+          echo "$f:$l: warning: code compiles both with and without $inc, but instructions differ" \
+            | tee -a "$LOG"
+        else
+          echo "$f:$l: warning: (not) including $inc has no effect" \
+            | tee -a "$LOG"
+        fi
       fi
     done
 
