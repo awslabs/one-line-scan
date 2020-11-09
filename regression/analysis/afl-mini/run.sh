@@ -18,10 +18,6 @@ D=fuzzing
 rm -rf $D
 mkdir -p $D
 
-# tell script about AFL
-AFL_LOCATION=$(which afl-gcc)
-export AFL_PATH=$(dirname "$AFL_LOCATION")
-
 # make sure we are actually resulting in the same binary/assembly
 afl-gcc read-stdin.c -g -o $D/number-afl.o -c -ffunction-sections
 objdump -lSd fuzzing/number-afl.o | wc

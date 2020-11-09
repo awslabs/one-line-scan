@@ -59,7 +59,6 @@ inject_afl()
     return 1
   fi
 
-  export AFL_PATH=$(dirname "$AFL_GCC_LOCATION")
   perl -p -i -e "s:NATIVE_AFL_PATH=:NATIVE_AFL_PATH=$(dirname "$AFL_GCC_LOCATION"):" "$TARGET_GCC"
   # tell the wrapper about the location of AFL
   perl -p -i -e "s:NATIVE_GCC=/bin/false:NATIVE_GCC=$GOTO_GCC_NATIVE_COMPILER:" "$TARGET_GCC"
