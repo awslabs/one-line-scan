@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# check whether environment is setup to actually test
+if ! command -v sourceanalyzer &> /dev/null;
+then
+        echo "warning: did not find sourceanalyzer, skip test"
+        exit 0
+fi
+
 # setup a dummy git repository
   git init .
   trap 'rm -rf .git' EXIT
