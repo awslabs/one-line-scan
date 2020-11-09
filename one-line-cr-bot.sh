@@ -318,7 +318,7 @@ check_plain_build() {
 infer_analysis_findings() {
     rm -rf "$TMP_DATA_FOLDER"/infer_files
     local -i INFER_STATUS=0
-    one-line-scan -o "$TMP_DATA_FOLDER"/infer_files --trunc-existing --no-gotocc --infer $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/infer.log || INFER_STATUS=$?
+    one-line-scan -o "$TMP_DATA_FOLDER"/infer_files --trunc-existing --infer $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/infer.log || INFER_STATUS=$?
     cat "$TMP_DATA_FOLDER"/infer_files/infer/gcc_style_report.txt 2>/dev/null >>"$TMP_DATA_FOLDER"/findings.txt
     $CLEAN_COMMAND &>/dev/null
     return $INFER_STATUS
@@ -327,7 +327,7 @@ infer_analysis_findings() {
 cppcheck_analysis_findings() {
     rm -rf "$TMP_DATA_FOLDER"/cppcheck_files
     local -i CPPCHECK_STATUS=0
-    one-line-scan -o "$TMP_DATA_FOLDER"/cppcheck_files --trunc-existing --no-gotocc --cppcheck $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/cppcheck.log || CPPCHECK_STATUS=$?
+    one-line-scan -o "$TMP_DATA_FOLDER"/cppcheck_files --trunc-existing --cppcheck $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/cppcheck.log || CPPCHECK_STATUS=$?
     # forward findings, reduce noise for known noisy checkers
     cat "$TMP_DATA_FOLDER"/cppcheck_files/cppcheck/results/* 2>/dev/null |
         grep -v "^::" |

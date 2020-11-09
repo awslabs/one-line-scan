@@ -12,7 +12,7 @@ pushd src
 
 export CPPCHECK_EXTRA_ARG="--enable=all"
 STATUS=0
-../../../../one-line-scan --cppcheck -o T --no-gotocc -- make &> output.log || STATUS=$?
+../../../../one-line-scan --cppcheck -o T -- make &> output.log || STATUS=$?
 
 if [ "$STATUS" -eq 0 ]
 then

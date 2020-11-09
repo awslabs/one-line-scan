@@ -24,7 +24,7 @@ objdump -lSd fuzzing/number-afl.o | wc
 AFL_OBJECT_SIZE=$(objdump -lSd fuzzing/number-afl.o | wc | awk '{print $1,$2}')
 
 # compile the same object file with one-line-scan
-../../../one-line-scan --afl --no-gotocc -o $D/AFLO --use-existing --no-analysis -- gcc read-stdin.c -g -o $D/number-afl.o -c -ffunction-sections
+../../../one-line-scan --afl -o $D/AFLO --use-existing --no-analysis -- gcc read-stdin.c -g -o $D/number-afl.o -c -ffunction-sections
 objdump -lSd fuzzing/number-afl.o | wc
 SP_OBJECT_SIZE=$(objdump -lSd fuzzing/number-afl.o | wc | awk '{print $1,$2}')
 
@@ -38,7 +38,7 @@ fi
 gcc read-stdin.c -g -o $D/number-gcc
 
 # compile with one-line-scan --afl
-../../../one-line-scan --afl --no-gotocc -o $D/AFL --use-existing --no-analysis -- gcc read-stdin.c -o $D/number-afl
+../../../one-line-scan --afl -o $D/AFL --use-existing --no-analysis -- gcc read-stdin.c -o $D/number-afl
 
 if [ ! -x $D/number-afl ]
 then

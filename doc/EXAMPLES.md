@@ -12,26 +12,23 @@ When using the default options on a project, the project will be compiled for
 analysis with CBMC or other tools of the CPROVER tools suite, and a default
 analysis will be executed:
 
-    one-line-scan -- make
+    one-line-scan --cbmc -- make
 
 To disable analysis, which might be expensive in case of CPROVER, add the
 --no-analysis flag:
 
-    one-line-scan --no-analysis -- make
-
-For using any other backend, make sure you disable the goto-cc backend with the
---no-gotocc parameter.
+    one-line-scan --cbmc --no-analysis -- make
 
 To store log files and results in another directory, the -o flag can be used:
 
-    one-line-scan --no-analysis -o OLS -- make
+    one-line-scan --cbmc --no-analysis -o OLS -- make
 
 Multiple runs can use the same output directory, and either keep its content, or
 drop it. To keep them, add the flag --use-existing, otherwise --trunc-existing.
 Example calls are as follows:
 
-    one-line-scan --no-analysis -o OLS -- gcc 1.c -o 1.o
-    one-line-scan --no-analysis -o OLS --use-existing -- gcc 2.c -o 2.o
+    one-line-scan --cbmc --no-analysis -o OLS -- gcc 1.c -o 1.o
+    one-line-scan --cbmc --no-analysis -o OLS --use-existing -- gcc 2.c -o 2.o
 
 # Example Calls for Available Backends
 
@@ -44,7 +41,7 @@ that has many compiler calls and is typically compiled with several jobs. The
 plain wrapper records failing compiler calls, that can be investigated
 afterwards without rerunning sequential compilation again:
 
-    one-line-scan --plain --no-gotocc -o PLAIN -- make -j $(nproc)
+    one-line-scan --plain -o PLAIN -- make -j $(nproc)
 
 To display the failing calls, including the working directory where the call was
 actually issued, have a look into the failed_calls.log file:
@@ -56,7 +53,7 @@ example enabling additional warnings while not making them fatal, as well as
 adding sanitizers to an existing setup for testing. This can be achieved with
 the following call:
 
-     one-line-scan --plain --no-gotocc -o PLAIN \
+     one-line-scan --plain -o PLAIN \
          --extra-cflag-set "-Wno-error -Wextra -fsanitize=undefined" \
          -- make
 
@@ -68,7 +65,7 @@ takes care of the renaming, so that for example the compiler
 x86_64-unknown-linux-gcc can be used, as well as other cross-compilers. To use
 such a compiler, the --prefix parameter can be added.
 
-    one-line-scan --fortify --no-gotocc --prefix x86_64-unknown-linux- -- make
+    one-line-scan --fortify --prefix x86_64-unknown-linux- -- make
 
 
 ## Infer Backend
@@ -86,10 +83,10 @@ additional compiler is called 'new-compiler' like below.
 The following commands can be used to run Infer on a project with compiler
 'new-compiler', and with extra analysis options '--bufferoverrun'.
 
-    one-line-scan -o OLS --use-existing --no-gotocc --infer --no-analysis -- cmake
+    one-line-scan -o OLS --use-existing --infer --no-analysis -- cmake
     INFER_ANALYSIS_EXTRA_ARGS="--bufferoverrun" \
         OLS_TARGET_COMPILER="my-compiler" \
-        one-line-scan -o OLS --use-existing --no-gotocc --inter -- make
+        one-line-scan -o OLS --use-existing --inter -- make
 
 # Example Calls for One-Line-CR-Bot
 
