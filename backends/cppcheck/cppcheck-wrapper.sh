@@ -34,7 +34,7 @@ CHECK_CONFIG="--error-exitcode=-1 --quiet --force --enable=warning"
 # CHECK_CONFIG+=" --enable=style --enable=performance"
 # CHECK_CONFIG+=" --enable=information --enable=portability --inconclusive"
 # CHECK_CONFIG+=" --check-config"  # enable to see problems with setup
-CHECK_CONFIG+="$CPPCHECK_EXTRA_ARG"
+CHECK_CONFIG+=" $CPPCHECK_EXTRA_ARG"
 
 # arguments that should be added to the compiler (DO NOT TOUCH)
 GCCEXTRAARGUMENTS=

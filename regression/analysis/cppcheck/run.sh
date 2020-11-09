@@ -9,6 +9,8 @@ rm -rf src/T
 
 
 pushd src
+
+export CPPCHECK_EXTRA_ARG="--enable=all"
 STATUS=0
 ../../../../one-line-scan --cppcheck -o T --no-gotocc -- make &> output.log || STATUS=$?
 
