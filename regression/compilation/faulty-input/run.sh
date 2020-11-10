@@ -1,6 +1,12 @@
 #!/bin/bash
 # execute failed build, check whether faulty output is present
 
+if ! command -v goto-cc &> /dev/null
+then
+  echo "warning: did not find goto-cc, skip test"
+  exit 0
+fi
+
 # clean up directory first
 make clean
 

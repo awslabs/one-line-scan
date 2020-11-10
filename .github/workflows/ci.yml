@@ -36,7 +36,7 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       # [ACTION REQUIRED] Add your build dependencies here
       run: |
-        sudo apt-get install -y cppcheck afl cbmc
+        sudo apt-get install -y cppcheck afl
 
     # Run regression test suite
     - name: check environment
