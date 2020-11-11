@@ -18,11 +18,9 @@ request will receive code analysis.
 The file has sections labeled "[ACTION REQUIRED]" which likely need to be
 adapted to meet the configuration of your project.
 
-In case the analysis creates many false positive alarms for your project,
-consider to pass the parameter '-y' to the one-line-cr-bot.sh call. This will
-still run the analysis, but will not fail in case of errors. When doing so,
-spotting new defects becomes a more manual process, but will not block your pull
-requests unnecessarily.
+The given setup only comments to your PR communication, but does not stop block
+your PR. To be able to achieve this, the workflow has to be run as type
+pull_request_target, which has permissions to add comments.
 
     # Author: Norbert Manthey <nmanthey@amazon.de>
     #
@@ -37,13 +35,10 @@ requests unnecessarily.
     name: One Line CR Bot
 
     on:
-    pull_request:
-        # [ACTION REQUIRED] Set the branch you want to analyze PRs for
-        branches: [ mainline ]
-
-    # [ACTION REQUIRED] Use this, if you want analysis for push to repository as well
-    push:
-        branches: [ mainline ]
+    pull_request_target:
+      # [ACTION REQUIRED] Set the branch you want to analyze PRs for
+      branches:
+        - '**'
 
     jobs:
     build:
@@ -88,18 +83,21 @@ requests unnecessarily.
         env:
             # [ACTION REQUIRED] Adapt the values below accordingly
             # 'reference' is the name of the remote to use
+            # PR local: ${{github.event.pull_request.head.repo.full_name}}/${{github.event.pull_request.head.ref}}
             BASE_COMMIT: "reference/mainline"
             BUILD_COMMAND: "make -B all"
             CLEAN_COMMAND: "make clean"
             # Parameters to be forwarded to used tools in one-line-scan for customization
             # Additional CppCheck parameters, do not use e.g. --inconclusive
             CPPCHECK_EXTRA_ARG: "--enable=style --enable=performance --enable=information --enable=portability"
-            # Additional Infer parameters, do not use e.g. --pulse
+            # Additional Infer parameters
             INFER_ANALYSIS_EXTRA_ARGS: "--bufferoverrun"
             # These settings are more preferences, and not directly related to your project
             # Set INSTALL_MISSING to false, if ALL targetted tools are already present
+            IGNORE_ERRORS: false
             INSTALL_MISSING: true
             OVERRIDE_ANALYSIS_ERROR: true
+            POST_TO_GITHUB_PR_ONLY: true
             REPORT_NEW_ONLY: true
             VERBOSE: 0 # >0 shows all currently present defects as well
         # Be explicit about the tools to be used
