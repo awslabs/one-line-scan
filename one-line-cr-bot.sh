@@ -26,11 +26,13 @@ BUILD_COMMAND="${BUILD_COMMAND:-make -B}"
 CLEAN_COMMAND="${CLEAN_COMMAND:-make clean}"
 DEBUG="${DEBUG:-}"
 INFER_VERSION="${INFER_VERSION:-1.0.0}" # currently, we only support v1.0.0
-INGORE_ERRORS="${INGORE_ERRORS:-false}"
+IGNORE_ERRORS="${IGNORE_ERRORS:-false}"
 INSTALL_MISSING="${INSTALL_MISSING:-false}"
 ONELINESCAN_PARAMS="${ONELINESCAN_PARAMS:-}"
 OUTPUT_FILE="${OUTPUT_FILE:-}"
 OVERRIDE_ANALYSIS_ERROR="${OVERRIDE_ANALYSIS_ERROR:-false}"
+POST_TO_GITHUB_PR="${POST_TO_GITHUB_PR:-false}"
+POST_TO_GITHUB_PR_ONLY="${POST_TO_GITHUB_PR_ONLY:-false}"
 REPORT_NEW_ONLY="${REPORT_NEW_ONLY:-false}"
 WORK_COMMIT="${WORK_COMMIT:-}"
 declare -i VERBOSE
@@ -103,8 +105,13 @@ the default value for certain CLI parameters.
                 (default: $REPORT_NEW_ONLY, env: REPORT_NEW_ONLY)
   -O args ..... extra command line options for one-line-scan invocations
                 (default: $ONELINESCAN_PARAMS, env: ONELINESCAN_PARAMS)
+  -p .......... post findings to github PR that triggered the workflow
+                (default: $POST_TO_GITHUB_PR, env POST_TO_GITHUB_PR)
+  -P .......... post findings to github PR that triggered the workflow, and
+                indicate success of the execution, independently of new defects
+                (default: $POST_TO_GITHUB_PR_ONLY, env: POST_TO_GITHUB_PR_ONLY)
   -y .......... ignore analysis errors
-                (default: $INGORE_ERRORS, env: INGORE_ERRORS)
+                (default: $IGNORE_ERRORS, env: IGNORE_ERRORS)
 
   -h .......... print this help message
   -I .......... Try to install missing tools, if they cannot be found.
@@ -163,7 +170,8 @@ check_environment() {
     # Print the version output of the available tools
     echo "Versions of used tools:" 1>&2
     for tool in "${SUPPORTED_TOOLS[@]}"; do
-        if ! command -v "$tool" &>/dev/null && [ "${RUN_TOOL["${tool^^}"]}" == "true" ]; then
+        [ "${RUN_TOOL["${tool^^}"]}" != "true" ] && continue
+        if ! command -v "$tool" &>/dev/null; then
             echo "Error: Failed to find tool $tool, which has been activated. Abort" 1>&2
             ret=1
         else
@@ -279,11 +287,11 @@ setup_environment() {
 
     # Install tools, in case they are not present already
     if [ "$INSTALL_MISSING" == "true" ]; then
-        if ! command -v infer &>/dev/null; then
+        if ! command -v infer &>/dev/null && [ "${RUN_TOOL["INFER"]}" == "true" ]; then
             setup_infer "$TMP_DATA_FOLDER" || return $?
         fi
 
-        if ! command -v cppcheck &>/dev/null; then
+        if ! command -v cppcheck &>/dev/null && [ "${RUN_TOOL["CPPCHECK"]}" == "true" ]; then
             setup_cppcheck "$TMP_DATA_FOLDER" || return $?
         fi
     fi
@@ -310,7 +318,7 @@ check_plain_build() {
 infer_analysis_findings() {
     rm -rf "$TMP_DATA_FOLDER"/infer_files
     local -i INFER_STATUS=0
-    one-line-scan -o "$TMP_DATA_FOLDER"/infer_files --trunc-existing --no-gotocc --infer $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/infer.log || INFER_STATUS=$?
+    one-line-scan -o "$TMP_DATA_FOLDER"/infer_files --trunc-existing --infer $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/infer.log || INFER_STATUS=$?
     cat "$TMP_DATA_FOLDER"/infer_files/infer/gcc_style_report.txt 2>/dev/null >>"$TMP_DATA_FOLDER"/findings.txt
     $CLEAN_COMMAND &>/dev/null
     return $INFER_STATUS
@@ -319,7 +327,7 @@ infer_analysis_findings() {
 cppcheck_analysis_findings() {
     rm -rf "$TMP_DATA_FOLDER"/cppcheck_files
     local -i CPPCHECK_STATUS=0
-    one-line-scan -o "$TMP_DATA_FOLDER"/cppcheck_files --trunc-existing --no-gotocc --cppcheck $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/cppcheck.log || CPPCHECK_STATUS=$?
+    one-line-scan -o "$TMP_DATA_FOLDER"/cppcheck_files --trunc-existing --cppcheck $ONELINESCAN_PARAMS -- $BUILD_COMMAND &>"$TMP_DATA_FOLDER"/cppcheck.log || CPPCHECK_STATUS=$?
     # forward findings, reduce noise for known noisy checkers
     cat "$TMP_DATA_FOLDER"/cppcheck_files/cppcheck/results/* 2>/dev/null |
         grep -v "^::" |
@@ -336,7 +344,7 @@ show_findings_for_series() {
     [ ! -r "$TMP_DATA_FOLDER"/findings.txt ] && return 0
     sort -u -V "$TMP_DATA_FOLDER"/findings.txt >"$TMP_DATA_FOLDER"/sorted-findings.txt 2>/dev/null
 
-    "$TMP_DATA_FOLDER"/one-line-scan/configuration/utils/display-series-data.sh "$TMP_DATA_FOLDER"/sorted-findings.txt "$BASE_COMMIT"
+    "$TMP_DATA_FOLDER"/one-line-scan/utils/display-series-data.sh "$TMP_DATA_FOLDER"/sorted-findings.txt "$BASE_COMMIT"
 }
 
 # analyze a project for a given commit
@@ -409,7 +417,7 @@ if [ -z "$WORK_COMMIT" ]; then
     [ -z "$WORK_COMMIT" -o "$WORK_COMMIT" == "HEAD" ] && WORK_COMMIT=$(git rev-parse HEAD)
 fi
 
-while getopts "0b:B:c:dD:E:fhIno:O:vW:y" opt; do
+while getopts "0b:B:c:dD:E:fhIno:O:pPvW:y" opt; do
     case $opt in
     b)
         BUILD_COMMAND="$OPTARG"
@@ -456,6 +464,12 @@ while getopts "0b:B:c:dD:E:fhIno:O:vW:y" opt; do
     O)
         ONELINESCAN_PARAMS="$OPTARG"
         ;;
+    p)
+        POST_TO_GITHUB_PR="true"
+        ;;
+    P)
+        POST_TO_GITHUB_PR_ONLY="true"
+        ;;
     W)
         WORK_COMMIT="$OPTARG"
         ;;
@@ -463,7 +477,7 @@ while getopts "0b:B:c:dD:E:fhIno:O:vW:y" opt; do
         VERBOSE=$((VERBOSE + 1))
         ;;
     y)
-        INGORE_ERRORS="true"
+        IGNORE_ERRORS="true"
         ;;
     :)
         echo "Option -$OPTARG requires an argument." >&2
@@ -507,14 +521,14 @@ if [ -n "$BASE_COMMIT" ]; then
             [ -r "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt ]; then
             echo -e "\n\nAll findings worth reporting as introduced:"
             if [ "$REPORT_NEW_ONLY" == "true" ]; then
-                "$SCRIPT_DIR"/configuration/utils/extract_introduced_gcc_style.py \
+                "$SCRIPT_DIR"/utils/extract_introduced_gcc_style.py \
                     "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt \
-                    "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt | tee -a "$OUTPUT_FILE"
+                    "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt | tee "$OUTPUT_FILE"
                 DEFECT_STATUS="${PIPESTATUS[0]}"
             else
                 diff --new-line-format="" --unchanged-line-format="" \
                     "$TMP_DATA_FOLDER"/sorted-findings-"$WORK_COMMIT_FNAME".txt \
-                    "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt | tee -a "$OUTPUT_FILE"
+                    "$TMP_DATA_FOLDER"/sorted-findings-"$BASE_COMMIT_FNAME".txt | tee "$OUTPUT_FILE"
                 DEFECT_STATUS="${PIPESTATUS[0]}"
             fi
             echo -e "\n\n"
@@ -541,8 +555,15 @@ else
     cat "$TMP_DATA_FOLDER"/sorted-findings-"$TARGET_COMMIT".txt
 fi
 
+# post comment to PR?
+if [ "$POST_TO_GITHUB_PR" == "true" ] || [ "$POST_TO_GITHUB_PR_ONLY" == "true" ]; then
+    touch "$OUTPUT_FILE"
+    "$SCRIPT_DIR"/utils/comment-github-pr.py -r "$OUTPUT_FILE" || OVERALL_STATUS="$?"
+    [ "$POST_TO_GITHUB_PR_ONLY" == "true" ] && DEFECT_STATUS=0
+fi
+
 # ignore errors, if requested
-[ "$INGORE_ERRORS" == "true" ] && exit 0
+[ "$IGNORE_ERRORS" == "true" ] && exit 0
 
 # All steps we ran worked, signal success
 if [ "$DEFECT_STATUS" -eq 0 ]; then

@@ -1,9 +1,18 @@
 #!/bin/bash
 # execute failed build, check whether faulty output is present
 
+if ! command -v goto-cc &> /dev/null
+then
+  echo "warning: did not find goto-cc, skip test"
+  exit 0
+fi
+
+# clean up directory first
+make clean
+
 # make sure we run on a clean environment (otherwise we fail with "SP" exists)
 rm -rf SP
-../../../configuration/one-line-scan -o SP -- gcc fail.c
+../../../one-line-scan -o SP --cbmc -- gcc fail.c
 
 # did we produce faulty input files?
 ls SP/faultyInput/*

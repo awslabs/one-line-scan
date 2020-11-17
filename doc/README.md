@@ -27,16 +27,16 @@ plain backend, which only tracks calls to the compiler, but does not act upon
 them. An example invocation for the plain backend and a project whose build
 command is "make" would be:
 
-    one-line-scan --plain --no-gotocc -- make
+    one-line-scan --plain -- make
 
 The available parameters of the tool can be seen when using the --help flag:
 
     one-line-scan --help
 
-More invocations of one-line-scan are presented in the file [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/configuration/doc/EXAMPLES.md)
+More invocations of one-line-scan are presented in the file [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md)
 
 By default, the wrapper for CBMC is enabled. Furthermore, analysis is enabled by
-default. To disable CBMC, use --no-gotocc, and to disable analysis, use the
+default. To disable CBMC, use, and to disable analysis, use the
 parameter --no-analysis.
 
 ### Analyzing Git Series
@@ -61,9 +61,9 @@ This command builds the project with "make", uses "make clean" for cleaning
 build artifacts, installs missing tools, tries to be conservative wrt presenting
 new defects, and shows defects that are present in the current state along with
 the introduced defects. More example calls can be found in the example call
-description [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/configuration/doc/EXAMPLES.md).
+description [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md).
 Examples how to integrate this script into further automation to create reports
-of new defects automatically, check [doc/ONELINECRBOT.md](https://github.com/awslabs/one-line-scan/blob/master/configuration/doc/ONELINECRBOT.md).
+of new defects automatically, check [doc/ONELINECRBOT.md](https://github.com/awslabs/one-line-scan/blob/master/doc/ONELINECRBOT.md).
 
 ## How It Works
 
@@ -81,14 +81,14 @@ actual compiler. This allow us the take action on compiler invocations.
 To check which compiler would be visible inside the build command, run the
 following command that uses the plain wrapper:
 
-    one-line-scan --plain --no-gotocc -o OLS --trunc-existing -- which gcc
+    one-line-scan --plain -o OLS --trunc-existing -- which gcc
 
 With this mechanism, compiler calls based on their absolute path cannot be
 intercepted. Consequently, analysis will not detect these calls. To still be
 able to get these calls, one-line-scan should be used during the configuration
 with "./configure" or "cmake", and next should re-use the created directory for
 the actual compilation. This way, the wrapper will be used during configuration.
-See call examples in configuration/doc/EXAMPLES.md or more details below.
+See call examples in [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md) or more details below.
 
 ## How to Use For
 
@@ -105,7 +105,7 @@ potential use cases. For each call, analysis will be enabled.
 
 For a simple compiler invocation, specify the following line:
 
-    one-line-scan -o OLS --trunc-existing -- gcc test.c -o test
+    one-line-scan -o OLS --trunc-existing --cbmc -- gcc test.c -o test
 
 #### Make
 
@@ -113,7 +113,7 @@ Make typically uses compilers directly, without an absolute path -- depending on
 the actually used Makefile. Hence, the following command should be able to get
 the used compiler calls:
 
-    one-line-scan -o OLS --trunc-existing --no-gotocc --plain -- make
+    one-line-scan -o OLS --trunc-existing --plain -- make
 
 #### Configure and Make
 
@@ -122,8 +122,8 @@ preceeding configure call might set the absolute path based on the tools that
 have been detected. Hence, configuration and compilation should be run with the
 same one-line-scan directory. This directory should be re-used.
 
-    one-line-scan -o OLS --use-existing --no-gotocc --fortify --no-analysis -- ./configure
-    one-line-scan -o OLS --use-existing --no-gotocc --fortify -- make
+    one-line-scan -o OLS --use-existing --fortify --no-analysis -- ./configure
+    one-line-scan -o OLS --use-existing --fortify -- make
 
 #### CMake
 
@@ -132,8 +132,8 @@ typically spots used tools, and converts that into compiler names. To be able to
 intercept the compiler call, configuration and compilation should be run with
 the same one-line-scan directory. This directory should be re-used.
 
-    one-line-scan -o OLS --use-existing --no-gotocc --infer --no-analysis -- cmake
-    one-line-scan -o OLS --use-existing --no-gotocc --inter -- make
+    one-line-scan -o OLS --use-existing --infer --no-analysis -- cmake
+    one-line-scan -o OLS --use-existing --inter -- make
 
 In case cmake created a separate directory dir, use "make -C dir" to enter the
 directory "dir" for compilation.
@@ -147,7 +147,7 @@ For the above compilers, example calls would be
 
 To wrap clang++-9, run:
 
-    one-line-scan -o OLS --suffix -9 -- make
+    one-line-scan -o OLS --suffix -9 --cbmc -- make
 
 To wrap x86_64-unknown-linux-gnu-gcc, run:
 
@@ -155,7 +155,8 @@ To wrap x86_64-unknown-linux-gnu-gcc, run:
 
 To wrap x86_64-unknown-linux-gnu-gcc-8, run:
 
-    one-line-scan -o OLS --prefix x86_64-unknown-linux-gnu- --suffix -9 -- make
+    one-line-scan -o OLS --prefix x86_64-unknown-linux-gnu- --suffix -9 --cbmc \
+        -- make
 
 The list of base compilers to be wrapped can be extended via the environment
 variable OLS_TARGET_COMPILER. If multiple should be added, separate them by a

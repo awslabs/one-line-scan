@@ -18,21 +18,17 @@ D=fuzzing
 rm -rf $D
 mkdir -p $D
 
-# tell script about AFL
-AFL_LOCATION=$(which afl-gcc)
-export AFL_PATH=$(dirname "$AFL_LOCATION")
-
 # make sure we are actually resulting in the same binary/assembly
 afl-gcc read-stdin.c -g -o $D/number-afl.o -c -ffunction-sections
 objdump -lSd fuzzing/number-afl.o | wc
 AFL_OBJECT_SIZE=$(objdump -lSd fuzzing/number-afl.o | wc | awk '{print $1,$2}')
 
 # compile the same object file with one-line-scan
-../../../configuration/one-line-scan --afl --no-gotocc -o $D/AFLO --no-analysis -- gcc read-stdin.c -g -o $D/number-afl.o -c -ffunction-sections
+../../../one-line-scan --afl -o $D/AFLO --use-existing --no-analysis -- gcc read-stdin.c -g -o $D/number-afl.o -c -ffunction-sections
 objdump -lSd fuzzing/number-afl.o | wc
 SP_OBJECT_SIZE=$(objdump -lSd fuzzing/number-afl.o | wc | awk '{print $1,$2}')
 
-if [ $AFL_OBJECT_SIZE -ne $SP_OBJECT_SIZE ]
+if [ "$AFL_OBJECT_SIZE" != "$SP_OBJECT_SIZE" ]
 then
   echo "size of binaries with and without afl do not match - abort"
   exit 1
@@ -42,7 +38,7 @@ fi
 gcc read-stdin.c -g -o $D/number-gcc
 
 # compile with one-line-scan --afl
-../../../configuration/one-line-scan --afl --no-gotocc -o $D/AFL --no-analysis -- gcc read-stdin.c -o $D/number-afl
+../../../one-line-scan --afl -o $D/AFL --use-existing --no-analysis -- gcc read-stdin.c -o $D/number-afl
 
 if [ ! -x $D/number-afl ]
 then

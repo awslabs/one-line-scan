@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# check whether environment is setup to actually test
+if ! command -v sourceanalyzer &> /dev/null;
+then
+        echo "warning: did not find sourceanalyzer, skip test"
+        exit 0
+fi
+
 # setup a dummy git repository
   git init .
   trap 'rm -rf .git' EXIT
@@ -14,14 +21,14 @@
 
 # analyze
   rm -rf SP
-  ../../../configuration/one-line-scan --debug --fortify --no-gotocc --display-upstream HEAD~1 -o SP -- gcc test.c 
+  ../../../one-line-scan --debug --fortify --display-upstream HEAD~1 -o SP -- gcc test.c 
   echo $?
   cat SP/log/fortify-summary-filtered.txt 
   echo ""
 
 # analyze
   rm -rf SP
-  ../../../configuration/one-line-scan --debug --fortify --no-gotocc --display-upstream HEAD~1 -o SP -- gcc a.c 
+  ../../../one-line-scan --debug --fortify --display-upstream HEAD~1 -o SP -- gcc a.c 
   echo $?
   echo "filtered:"
   cat SP/log/fortify-summary-filtered.txt 

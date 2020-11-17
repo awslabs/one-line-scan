@@ -28,6 +28,24 @@ inject_gotocc()
     return 1
   fi
 
+  # automatically set the tool for goto-ld
+  if [ -z "$GOTO_LD_BINARY" ]
+  then
+     GOTO_LD_REPLACEMENT="$(which goto-cc)"
+     if [ -n "$GOTO_LD_REPLACEMENT" ]
+     then
+       mkdir -p "$GOTO_GCC_WRAPPER_INSTALL_DIR"/goto-ld-tmp-bin-dir
+       if [ ! -x "$GOTO_GCC_WRAPPER_INSTALL_DIR"/goto-ld-tmp-bin-dir/goto-ld ]
+       then
+         ln -s "$GOTO_LD_REPLACEMENT" "$GOTO_GCC_WRAPPER_INSTALL_DIR"/goto-ld-tmp-bin-dir/goto-ld
+       fi
+       GOTO_LD_BINARY="$GOTO_GCC_WRAPPER_INSTALL_DIR/goto-ld-tmp-bin-dir/goto-ld"
+       export PATH=$PATH:"$GOTO_GCC_WRAPPER_INSTALL_DIR"/goto-ld-tmp-bin-dir
+     else
+       echo "goto-ld to be used: $GOTO_LD_REPLACEMENT"
+     fi
+  fi
+
   # handle all prefixes. i.e. no prefix and the potentially specified prefix
   for SUFFIX in "" $TOOLSUFFIX
   do
