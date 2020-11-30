@@ -34,8 +34,10 @@ pull_request_target, which has permissions to add comments.
     # script 'one-line-cr-bot.sh' in https://github.com/awslabs/one-line-scan.git
     name: One Line CR Bot
 
+    # Using pull_request_target poses a security risk, as the token could be
+    # leaked. Hence, you should not use the comment on PR functionality.
     on:
-    pull_request_target:
+    pull_request:
       # [ACTION REQUIRED] Set the branch you want to analyze PRs for
       branches:
         - '**'
@@ -97,7 +99,8 @@ pull_request_target, which has permissions to add comments.
             IGNORE_ERRORS: false
             INSTALL_MISSING: true
             OVERRIDE_ANALYSIS_ERROR: true
-            POST_TO_GITHUB_PR_ONLY: true
+            POST_TO_GITHUB_PR: false
+            POST_TO_GITHUB_PR_ONLY: false
             REPORT_NEW_ONLY: true
             VERBOSE: 0 # >0 shows all currently present defects as well
         # Be explicit about the tools to be used
