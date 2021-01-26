@@ -1,5 +1,5 @@
-The basic functionality of the one line cr bot is described in the [doc/README.md](https://github.com/awslabs/one-line-scan/blob/master/doc/README.md)
-file. Examples to use the file are given in the [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md) file. This file
+The basic functionality of the one line cr bot is described in the [doc/README.md](https://github.com/awslabs/one-line-scan/blob/mainline/doc/README.md)
+file. Examples to use the file are given in the [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/mainline/doc/EXAMPLES.md) file. This file
 highlights using one-line-cr-bot.sh as part of CI systems.
 
 # Workflows
