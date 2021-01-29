@@ -313,7 +313,7 @@ create_environment ()
 
   if [ "$USE_EXISTING_DIR" = "trunc" ]
   then
-    # currently, use a white list approach for clean up
+    # currently, use an allow list approach for clean up
     rm -f "$FULLDIRECTORY"/{binaries.list,build.log,environmentInfo.txt,wrapper-log.txt,libraries.list}
     rm -f "$FULLDIRECTORY/Fortify/fortify-preprocess.log"
     rm -f "$FULLDIRECTORY/log/fortify-scan.log"

@@ -33,7 +33,7 @@ The available parameters of the tool can be seen when using the --help flag:
 
     one-line-scan --help
 
-More invocations of one-line-scan are presented in the file [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md)
+More invocations of one-line-scan are presented in the file [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/mainline/doc/EXAMPLES.md)
 
 By default, the wrapper for CBMC is enabled. Furthermore, analysis is enabled by
 default. To disable CBMC, use, and to disable analysis, use the
@@ -61,9 +61,9 @@ This command builds the project with "make", uses "make clean" for cleaning
 build artifacts, installs missing tools, tries to be conservative wrt presenting
 new defects, and shows defects that are present in the current state along with
 the introduced defects. More example calls can be found in the example call
-description [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md).
+description [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/mainline/doc/EXAMPLES.md).
 Examples how to integrate this script into further automation to create reports
-of new defects automatically, check [doc/ONELINECRBOT.md](https://github.com/awslabs/one-line-scan/blob/master/doc/ONELINECRBOT.md).
+of new defects automatically, check [doc/ONELINECRBOT.md](https://github.com/awslabs/one-line-scan/blob/mainline/doc/ONELINECRBOT.md).
 
 ## How It Works
 
@@ -88,7 +88,7 @@ intercepted. Consequently, analysis will not detect these calls. To still be
 able to get these calls, one-line-scan should be used during the configuration
 with "./configure" or "cmake", and next should re-use the created directory for
 the actual compilation. This way, the wrapper will be used during configuration.
-See call examples in [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/master/doc/EXAMPLES.md) or more details below.
+See call examples in [doc/EXAMPLES.md](https://github.com/awslabs/one-line-scan/blob/mainline/doc/EXAMPLES.md) or more details below.
 
 ## How to Use For
 
