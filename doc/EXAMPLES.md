@@ -88,6 +88,24 @@ The following commands can be used to run Infer on a project with compiler
         OLS_TARGET_COMPILER="my-compiler" \
         one-line-scan -o OLS --use-existing --inter -- make
 
+## CppCheck Backend
+
+To use CppCheck as analysis backend, the following command line can be used:
+
+    one-line-scan -o OLS --use-existing \
+        --cppcheck \
+        --prefix x86_64-pc-linux-gnu- \
+        -- make
+
+While targetting the compiler gcc, we furthermore track x86_64-pc-linux-gnu-gcc
+by specifying the compiler prefix 'x86_64-pc-linux-gnu-'. This command will only
+present errors.
+
+To see all findings, you can use the following command, which also deduplicates
+issues:
+
+    sort -V -u OLS/cppcheck/results/*
+
 # Example Calls for One-Line-CR-Bot
 
 This section demonstrates how defects for a commit series can be reported. To
