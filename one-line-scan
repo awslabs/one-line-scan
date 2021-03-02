@@ -47,6 +47,7 @@ TOOLSUFFIX=              # might wrap a variant of gcc additionally to gcc
 GITUPSTREAM=             # display findings only for commits made after this ID
 GITBRANCH=               # display findings only for commits until this point
 ADD_TO_PATH=             # add these values to the PATH environment variable before continuing
+QUIET=                  # if set, do not print information, but just execute commands
 
 
 # locate the script to be able to call related scripts
@@ -70,11 +71,11 @@ rewriteToNonexisting ()
 	local FINALDIR="$STARTDIR"
 	while [ -d "$FINALDIR" ]
 	do
-		echo "directory $FINALDIR exists already" 1>&2
+		log "directory $FINALDIR exists already" 1>&2
 		TRY=$(($TRY+1))
 		FINALDIR="$STARTDIR$TRY"
 	done
-	echo "$FINALDIR"
+	log "$FINALDIR"
 }
 
 # store environment when building with one-line-scan
@@ -135,6 +136,7 @@ usage: [ENVIRONMENTSETUP] one-line-scan [OPTIONS] -- <build-command>
     --analysis-time time  add a maximal analysis time (in seconds)
     --display-upstream ID display findings only for commits made after ID
     --display-branch ID   display findings only for commits until this ID
+    --quiet      (-q)     do not generate one-line-scan related output
 EOF
 }
 
@@ -166,7 +168,7 @@ do
                         FORTIFY_ANALYSIS_CONFIG="$FORTIFY_ANALYSIS_CONFIG --rules $2"
                         shift
                       else
-                        echo "warning: specified --rules parameter without value"
+                        log  "warning: specified --rules parameter without value"
                       fi
                       ;;
     --smatch)      USE_SMATCH="--smatch";;
@@ -177,7 +179,7 @@ do
                      EXPERT=" $EXPERT "$2""
                      shift
                    else
-                     echo "warning: specified --expert value without parameter"
+                     log  "warning: specified --expert value without parameter"
                    fi
                    ;;
     --plain)       USE_PLAIN="--plain";;
@@ -198,6 +200,8 @@ do
                    USER_SPECIFIED_DIR=t
                    shift
                    ;;
+    --quiet | -q)  QUIET="true"
+                   ;;
     --use-existing)   USE_EXISTING=--re-use;;
     --trunc-existing) USE_EXISTING=--trunc;;
     --origin)      BINARY_ORIGIN=$2; shift;;
@@ -208,7 +212,7 @@ do
                      [ $2 -lt 2 ] || NUM_LOCKS=$2
                      shift
                    else
-                     echo "warning: specified -j without a number, will not change value"
+                     log  "warning: specified -j without a number, will not change value"
                    fi
                    ;;
     --stop-after-fail) STOP_AFTER_FAIL=t;;
@@ -245,7 +249,7 @@ do
                    fi
                    shift;;
     --)            shift; break ;;
-    *)             echo "warning: unknown parameter $1, have you forgotten the '--'? continue with build." 1>&2; break ;;
+    *)             log  "warning: unknown parameter $1, have you forgotten the '--'? continue with build." 1>&2; break ;;
     esac
     shift
 done
@@ -266,7 +270,7 @@ if [ -n "$USER_SPECIFIED_DIR" ] && \
    [ -z $CONTINUE ] && \
    [ -z $USE_EXISTING ]
 then
-  echo "error: output directory $WORKINGDIR exists already"
+  log  "error: output directory $WORKINGDIR exists already"
   exit 1
 fi
 
@@ -320,13 +324,14 @@ then
     "$LINK" "$USE_EXISTING" "$USE_AFL" "$USE_FORTIFY" "$USE_SMATCH" \
     "$TOOLPREFIX" "$TOOLSUFFIX" -j $NUM_LOCKS "$EXTRA_INJECT_OPTIONS" "$EXTRA_CFLAGS" \
     "$EXPERT" "$USE_GOTOCC"  $USE_CPPCHECK $USE_PLAIN $USE_INFER"
+  [ "$QUIET" = true ] && WRAPPER_SETUP_OPTIONS+=" --quiet"
   log $(echo "setting up wrapper with: $WRAPPER_SETUP_OPTIONS" | sed 's/  */ /g')
 
   # check whether the environment is actually usable for the wrapper injection
   TMP_ERROR=$(mktemp)
   if ! $SCRIPT_CALLER "$INJECT_TOOLS"/check-setup.sh $WRAPPER_SETUP_OPTIONS > $TMP_ERROR 2>&1
   then
-    echo "error: check for injecting compiler wrapper failed - abort" 1>&2
+    log "error: check for injecting compiler wrapper failed - abort" 1>&2
     cat $TMP_ERROR 2> /dev/null
     rm -f $TMP_ERROR
     exit 1
