@@ -23,7 +23,7 @@ function evaluate_plain
 
   if [ -n "$(find "$RESULTS_DIR"/compilation_databases -name "*.json" 2> /dev/null)" ]
   then
-    echo "Combining compilation databases into a single one ..."
+    log "Combining compilation databases into a single one ..."
     echo "[" > "$CMDB"
     find "$RESULTS_DIR"/compilation_databases -name "*.json" | \
       sort -g | \
@@ -31,12 +31,12 @@ function evaluate_plain
       sed  '$ s:},$:}:g' >> "$CMDB"
     echo "]" >> "$CMDB"
   else
-    echo "Did not find JSON files to assemble a compilation database"
+    log "Did not find JSON files to assemble a compilation database"
   fi
 
-  echo "found $(cat $REPLAYLOG | wc -l) calls to the compiler"
-  [ ! -f "$REPLAYLOG" ] || echo "calls to replay can be found in: $REPLAYLOG"
-  [ ! -f "$CALLLOG" ] || echo "more structured calls can be found in: $CALLLOG"
-  [ ! -f "$RESULTS_DIR/compilation_database.json" ] || echo "Combilation database can be found in: $CMDB"
+  log "found $(cat $REPLAYLOG | wc -l) calls to the compiler"
+  [ ! -f "$REPLAYLOG" ] || log "calls to replay can be found in: $REPLAYLOG"
+  [ ! -f "$CALLLOG" ] || log "more structured calls can be found in: $CALLLOG"
+  [ ! -f "$RESULTS_DIR/compilation_database.json" ] || log "Combilation database can be found in: $CMDB"
   return 0
 }
