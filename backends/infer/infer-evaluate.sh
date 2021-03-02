@@ -146,5 +146,6 @@ function evaluate_infer() {
   print_infer_analysis_stats "$RESULTS_DIR"
   [ -r "$RESULTS_DIR"/gcc_style_report.txt ] && log "All infer findings are listed in $RESULTS_DIR/gcc_style_report.txt ($(cat "$RESULTS_DIR"/gcc_style_report.txt | wc -l) findings)"
 
-  return $STATUS
+  [ "$STATUS" -ne 0 ] && return $STATUS
+  return "$INFER_ANALYSIS_STATUS"
 }
