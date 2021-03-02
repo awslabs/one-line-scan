@@ -38,7 +38,7 @@ function needs_capturing_retry() {
   local -r CAPTURE_LOG="$2"
 
   if grep -q "clang.*: error: unknown argument:" "$CAPTURE_LOG"; then
-    echo "Found recoverable retry error"
+    log "Found recoverable retry error"
     local -a ARGUMENTS=($(awk '/clang.*: error: unknown argument:/ {print $NF}' "$CAPTURE_LOG" | sort -u | tr -d "'"))
 
     for ARGUMENT in "${ARGUMENTS[@]}"; do
@@ -57,13 +57,13 @@ function infer_capture() {
 
   prepare_gcc_compilation_db_for_clang "$RESULTS_DIR"/combined_compilation_database.json
 
-  echo "Running capturing from compilation database (storing output in "$RESULTS_DIR"/infer_capture.log) ..."
+  log "Running capturing from compilation database (storing output in "$RESULTS_DIR"/infer_capture.log) ..."
   while true; do
     infer capture --keep-going -o "$INFER_OUTPUT_DIR" \
       --compilation-database "$RESULTS_DIR"/combined_compilation_database.json &>"$RESULTS_DIR"/infer_capture.log
 
     if needs_capturing_retry "$RESULTS_DIR/combined_compilation_database.json" "$RESULTS_DIR/infer_capture.log"; then
-      echo "Retrying capturing due to auto-fixed issues"
+      log "Retrying capturing due to auto-fixed issues"
       continue # Run the capture command again with a modified DB
     fi
 
@@ -85,8 +85,8 @@ function print_infer_analysis_stats() {
   # grep " errors generated." "$RESULTS_DIR"/infer_capture.log | sort -u
   local -r CAPTURE_ERRORS=$(grep -c "Failed to execute compilation command:" "$RESULTS_DIR"/infer_capture.log)
 
-  echo "Number of errors during capturing: $CLANG_ERROR_COUNT"
-  echo "Failed to capture $CAPTURE_ERRORS files out of $COMPILE_COMMANDS (check $RESULTS_DIR/infer_capture.log for details)"
+  log "Number of errors during capturing: $CLANG_ERROR_COUNT"
+  log "Failed to capture $CAPTURE_ERRORS files out of $COMPILE_COMMANDS (check $RESULTS_DIR/infer_capture.log for details)"
 }
 
 # Evaluate and return non-zero in case of failure
@@ -94,7 +94,7 @@ function evaluate_infer() {
   local -r RESULTS_DIR="$WORKINGDIR/infer"
   local -r INFER_OUTPUT_DIR="$RESULTS_DIR/combined_output"
 
-  echo "Combining compilation databases into a single one ..."
+  log "Combining compilation databases into a single one ..."
   echo "[" >"$RESULTS_DIR"/combined_compilation_database.json
   find "$RESULTS_DIR"/deps_output -name "*.json" |
     sort -g |
@@ -105,7 +105,7 @@ function evaluate_infer() {
   infer_capture "$RESULTS_DIR" "$INFER_OUTPUT_DIR"
 
   # run analysis on combined output from "infer capture --continue" calls
-  echo "Running infer analyze (storing output in "$RESULTS_DIR"/infer_analyze.log) ..."
+  log "Running infer analyze (storing output in "$RESULTS_DIR"/infer_analyze.log) ..."
   local -i INFER_ANALYSIS_STATUS=0
   INFER_ANALYSIS_EXTRA_ARGS="${INFER_ANALYSIS_EXTRA_ARGS:-}"
   infer analyze \
@@ -121,7 +121,7 @@ function evaluate_infer() {
 
   # Handle errors
   if [ "$INFER_ANALYSIS_STATUS" -ne 0 ]; then
-    echo "There has been an error during analysis, please check: $RESULTS_DIR/infer_analyze.log"
+    log "There has been an error during analysis, please check: $RESULTS_DIR/infer_analyze.log"
   fi
 
   # Other, potentially relevant, parameter to infer analyze:
@@ -139,12 +139,12 @@ function evaluate_infer() {
     cat "$RESULTS_DIR"/gcc_style_report.txt
 
   else
-    echo "error: did not find report.json from Infer analysis"
+    log "error: did not find report.json from Infer analysis"
     STATUS=1
   fi
 
   print_infer_analysis_stats "$RESULTS_DIR"
-  [ -r "$RESULTS_DIR"/gcc_style_report.txt ] && echo "All infer findings are listed in $RESULTS_DIR/gcc_style_report.txt ($(cat "$RESULTS_DIR"/gcc_style_report.txt | wc -l) findings)"
+  [ -r "$RESULTS_DIR"/gcc_style_report.txt ] && log "All infer findings are listed in $RESULTS_DIR/gcc_style_report.txt ($(cat "$RESULTS_DIR"/gcc_style_report.txt | wc -l) findings)"
 
   return $STATUS
 }
