@@ -15,6 +15,8 @@
 
 log()
 {
+  [ "${QUIET:-}" = "true" ] && return
+
   echo "$*" | while IFS="" read -r line; do
   if [ -z "$TERM" ]; then
     echo "$(date -u "+%F %T%z" | sed 's/..$/:&/')$(tput setaf 6) $line$(tput sgr0)"

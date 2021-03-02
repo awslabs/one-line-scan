@@ -64,6 +64,16 @@ TOOLSUFFIX=
 ORIGIN="one-line-scan"
 INCLUDE_WARNINGS=
 NESTED=
+QUIET=
+
+# locate the script to be able to call related scripts
+SCRIPT=$(readlink -e "$0")
+declare -r SCRIPT
+SCRIPTDIR=$(dirname "$SCRIPT")
+declare -r SCRIPTDIR
+
+# functions that are used, might not be required when being sourced from the main tool
+source "$SCRIPTDIR"/../utils/log.sh &> /dev/null || true
 
 # parse arguments
 parse_arguments ()
@@ -92,7 +102,7 @@ parse_arguments ()
                     NUM_LOCKS=$2
                     shift
                   else
-                    echo "warning: specified -j without an number, will not change value"
+                    log "warning: specified -j without an number, will not change value"
                   fi
                   ;;
     --forward)    if [ -n "$2" ] && [ -n "$3" ]
@@ -101,17 +111,18 @@ parse_arguments ()
                     FORWARDS+=("$3")
                     shift 2
                   else
-                    echo "error: forward is called without two following arguments - abort"
-                    echo "<$1> <$2> <$3>"
+                    log "error: forward is called without two following arguments - abort"
+                    log "<$1> <$2> <$3>"
                     return 1
                   fi;;
     --prefix)     TOOLPREFIX+=" $2"; shift;;
     --suffix)     TOOLSUFFIX+=" $2"; shift;;
     --origin)     ORIGIN=$2; shift;;
     --include-warnings) INCLUDE_WARNINGS=t ;;
+    --quiet)      QUIET=true ;;
     --nested)     NESTED=t
                   TOOLPREFIX+=" x86_64-unknown-linux-gnu-";;
-    *)            echo "warning: unknown parameter $1" ;;
+    *)            log "warning: unknown parameter $1" ;;
     esac
     shift
   done
@@ -122,7 +133,7 @@ parse_arguments ()
 # check whether we already have an active wrapper and warn the user, but do not delete the other wrapper
 if [ -n "$GOTO_GCC_WRAPPER_INSTALL_DIR" ]
 then
-    echo "warning: found a wrapper already at $GOTO_GCC_WRAPPER_INSTALL_DIR"
+    log "warning: found a wrapper already at $GOTO_GCC_WRAPPER_INSTALL_DIR"
 fi
 
 # use source dir to be able to copy the correct wrapper script
@@ -230,13 +241,13 @@ load_tools()
       || [ ! -x "$GOTO_GCC_BINARY" ] \
       || [ ! -x "$GOTO_GCC_NATIVE_AR" ]
     then
-      echo "error: did not find all necessary tools in the PATH environment"
-      echo "gcc:      $GOTO_GCC_NATIVE_COMPILER"
-      echo "ld:       $GOTO_GCC_NATIVE_LINKER"
-      echo "goto-gcc: $GOTO_GCC_BINARY"
-      echo "goto-ld:  $GOTO_LD_BINARY"
-      echo "goto-diff:$GOTO_DIFF_BINARY"
-      echo "abort setup"
+      log "error: did not find all necessary tools in the PATH environment"
+      log "gcc:      $GOTO_GCC_NATIVE_COMPILER"
+      log "ld:       $GOTO_GCC_NATIVE_LINKER"
+      log "goto-gcc: $GOTO_GCC_BINARY"
+      log "goto-ld:  $GOTO_LD_BINARY"
+      log "goto-diff:$GOTO_DIFF_BINARY"
+      log "abort setup"
       return 1
     fi
   fi
@@ -277,21 +288,21 @@ create_environment ()
           rm $FULLDIRECTORY/.checked-ok
         elif [ -e $FULLDIRECTORY/.checked-missing ]
         then
-          echo "warning: target directory $TARGET_DIRECTORY did not exist"
+          log "warning: target directory $TARGET_DIRECTORY did not exist"
           rm $FULLDIRECTORY/.checked-missing
         else
-          [ -z "$USE_EXISTING_DIR" ] && echo "warning: target directory $TARGET_DIRECTORY already exists"
+          [ -z "$USE_EXISTING_DIR" ] && log "warning: target directory $TARGET_DIRECTORY already exists"
         fi
       else
         KEEP_DIRECTORY=
         if ! mkdir "$FULLDIRECTORY" 2> /dev/null
         then
-          echo "error: creating the target directory finished with a failure - abort"
+          log "error: creating the target directory finished with a failure - abort"
           return 1
         fi
         if [ -n "$USE_EXISTING_DIR" ]
         then
-          echo "warning: target directory $TARGET_DIRECTORY did not exist"
+          log "warning: target directory $TARGET_DIRECTORY did not exist"
           touch $FULLDIRECTORY/.checked-missing
         else
           touch $FULLDIRECTORY/.checked-ok
@@ -431,8 +442,8 @@ then
   fi
 fi
 
-echo "info: injected $INJECTED_BACKENDS backends"
+log "info: injected $INJECTED_BACKENDS backends"
 if [ "$INJECTED_BACKENDS" -eq 0 ]
 then
-  echo "warning: make sure to inject backends. Use --help to see more details!"
+  log "warning: make sure to inject backends. Use --help to see more details!"
 fi

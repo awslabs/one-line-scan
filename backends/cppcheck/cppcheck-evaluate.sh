@@ -40,7 +40,7 @@ function evaluate_cppcheck
 
   log "Cppcheck found $TOTAL_ERRORS errors in $TOTAL_DEFECTS total defects in $TOTAL_FILES files" |& tee "$LOGFILE"
   echo "ERRORS:" | tee -a "$LOGFILE"
-  [ -z "$ERROR_FILES" ] || grep " (error:" $ERROR_FILES | tee -a "$LOGFILE" || true  # display errors, in case we found some
+  [ -z "$ERROR_FILES" ] || grep " (error:" $ERROR_FILES | sort -V -u | tee -a "$LOGFILE" || true  # display errors, in case we found some
   echo "RUNTIME INFO:" | tee -a "$LOGFILE"
   grep "^::" "$RESULTS_DIR"/* | sort -u | tee -a "$LOGFILE" || true # display cppcheck runtime info (each once)
   echo "DEFECT DISTRIBUTION:" | tee -a "$LOGFILE"
