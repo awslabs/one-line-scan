@@ -136,7 +136,7 @@ function evaluate_infer() {
       python3 "$RESULTS_DIR"/transform_report.py >"$RESULTS_DIR"/gcc_style_report.txt
 
     # Show the gcc-style results
-    cat "$RESULTS_DIR"/gcc_style_report.txt
+    cat "$RESULTS_DIR"/gcc_style_report.txt 2> /dev/null || true
 
   else
     log "error: did not find report.json from Infer analysis"

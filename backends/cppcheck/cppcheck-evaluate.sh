@@ -42,9 +42,9 @@ function evaluate_cppcheck
   echo "ERRORS:" | tee -a "$LOGFILE"
   [ -z "$ERROR_FILES" ] || grep " (error:" $ERROR_FILES | sort -V -u | tee -a "$LOGFILE" || true  # display errors, in case we found some
   echo "RUNTIME INFO:" | tee -a "$LOGFILE"
-  grep "^::" "$RESULTS_DIR"/* | sort -u | tee -a "$LOGFILE" || true # display cppcheck runtime info (each once)
+  grep "^::" "$RESULTS_DIR"/* 2> /dev/null | sort -u | tee -a "$LOGFILE" || true # display cppcheck runtime info (each once)
   echo "DEFECT DISTRIBUTION:" | tee -a "$LOGFILE"
-  grep -v "^::" "$RESULTS_DIR"/* | grep -v "(information) Couldn't find path given by -I" | \
+  grep -v "^::" "$RESULTS_DIR"/* 2> /dev/null | grep -v "(information) Couldn't find path given by -I" | \
     awk '{print $2}' | sort | uniq -c | sort -n -r | tee -a "$LOGFILE"
   log "Cppcheck results per source file can be found in: $WORKINGDIR/cppcheck/results/" |& tee -a "$LOGFILE"
 
