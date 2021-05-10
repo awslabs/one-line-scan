@@ -35,13 +35,6 @@ inject_cppcheck()
     return 1
   fi
 
-  # check the cppcheck version, and warn if there is a more recent version (at the time of writing)
-  CPPCHECK_VERSION=$(cppcheck --version | cut -d ' ' -f 2)
-  if (( $(echo "$CPPCHECK_VERSION < 1.81" |bc -l) ))
-  then
-    log "Note: there is a more recent cppcheck version, visit http://cppcheck.sourceforge.net/!"
-  fi
-
   # install wrapper
   mkdir -p "$INSTALL_DIR"
   for SUFFIX in "" $TOOLSUFFIX
