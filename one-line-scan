@@ -75,7 +75,7 @@ rewriteToNonexisting ()
 		TRY=$(($TRY+1))
 		FINALDIR="$STARTDIR$TRY"
 	done
-	log "$FINALDIR"
+	echo "$FINALDIR"
 }
 
 # store environment when building with one-line-scan
