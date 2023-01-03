@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM public.ecr.aws/lts/ubuntu:20.04
 
 ARG INFER_VERSION=v1.0.0
 
